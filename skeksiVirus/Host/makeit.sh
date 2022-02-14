@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-gcc -Wall sweet.c -o sweet
+gcc -Wall -no-pie sweet.c -o sweet
 #readelf -a sweet > readelf.txt
 #objdump -d sweet > disassembly_AT_and_T.txt
 #objdump -M intel -d sweet > disassembly_intel.txt
