@@ -5,7 +5,7 @@
  * Compile:
  * gcc -g -O0 -D ANTIDEBUG -D INFECT_PLTGOT  -fno-stack-protector -c virus.c -fpic -o virus.o
  * gcc -N -fno-stack-protector -nostdlib virus.o -o virus
- * //PER: gcc -N -static -fno-stack-protector -nostdlib virus.o -o virus
+ * //PER This one works: gcc -N -static -fno-stack-protector -nostdlib virus.o -o virus
  * Using -DDEBUG will allow Virus to print debug output
  *
  * Usage:
