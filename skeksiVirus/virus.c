@@ -7,7 +7,7 @@
  * gcc -N -fno-stack-protector -nostdlib virus.o -o virus
  * //PER This one works: gcc -N -static -fno-stack-protector -nostdlib virus.o -o virus
  * Using -DDEBUG will allow Virus to print debug output
- *
+ * gcc -g -w -N -static -O0 -D INFECT_PLTGOT  -fno-stack-protector -nostdlib -fpic virus.c -o virus
  * Usage:
  * ./virus
  *
@@ -532,7 +532,7 @@ int load_target(const char *path, elfbin_t *elf)
 	int fd = _open(path, O_RDONLY, 0);
 	if (fd < 0)
 		return -1;
-	elf->fd = fd;
+	elf->fd = fd; //PER: fd=4
 	if (_fstat(fd, &st) < 0)
 		return -1;
 	elf->mem = _mmap(NULL, st.st_size, PROT_READ|PROT_WRITE, MAP_PRIVATE, fd, 0); // PER: file loaded in memory(heap section) pointed by elf->mem 
@@ -548,6 +548,7 @@ int load_target(const char *path, elfbin_t *elf)
 			case PT_LOAD:
 				switch(!!elf->phdr[i].p_offset) {
 					case 0:
+						//PER: 0x401172 <load_target+452>:  mov    rax,QWORD PTR [rbp-0xc0]
 						elf->textVaddr = elf->phdr[i].p_vaddr;
 						elf->textSize = elf->phdr[i].p_memsz;
 						break;

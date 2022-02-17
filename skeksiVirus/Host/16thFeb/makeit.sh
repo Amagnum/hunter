@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
-gcc -Wall -no-pie sweet.c -o sweet
-cp sweet ./16thFeb/
+gcc -Wall -g -no-pie ../sweet.c -o ./sweet
+objdump -d -M intel ./sweet > disassembly_sweet.txt
+./sweet
 #readelf -a sweet > readelf.txt
 #objdump -d sweet > disassembly_AT_and_T.txt
 #objdump -M intel -d sweet > disassembly_intel.txt
