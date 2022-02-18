@@ -50,15 +50,15 @@ ret
   402d56:	c3                   	ret    
 
 ---------------
-RODATA Section (.rodata) < 17000 bytes
+RODATA Section (.rodata) < 17000 bytes [.rodata start from 0x2b64 in hexdump]
 ---------------
-PAD(filled with \0) = 17000 - .rodata (size)
+.eh_frame = 17000 - .rodata (size) [not used] [.eh_frame starts from 0x6854 in hexdump]
 ---------------
 
 [remaining of the healthy_file except ELF header]
 i.e.
 
-Program Headers starts at 0x40 in sweet:
+Program Headers starts at 0x7040 in sweet:
   Type           Offset             VirtAddr           PhysAddr
                  FileSiz            MemSiz              Flags  Align
   PHDR           0x0000000000007040 0x0000000000400040 0x0000000000400040
@@ -89,7 +89,7 @@ Program Headers starts at 0x40 in sweet:
   GNU_RELRO      0x0000000000009e10 0x0000000000403e10 0x0000000000403e10
                  0x00000000000001f0 0x00000000000001f0  R      0x1
 
-There are 36 section headers, starting at offset 0x41b8:
+There are 36 section headers, starting at offset 0xb1b8:
 
 Section Headers:
   [Nr] Name              Type             Address           Offset
