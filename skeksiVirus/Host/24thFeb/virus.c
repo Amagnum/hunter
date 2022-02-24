@@ -149,7 +149,7 @@ _start()
 	 * Save register state before executing parasite
 	 * code.
 	 */
-	
+	// 0x3fb246
 	//PER: saving the previous state of register in order to not hamper the host program
 	__ASM__ (
 	 ".globl real_start	\n"
