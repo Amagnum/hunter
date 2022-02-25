@@ -374,7 +374,7 @@ void pi_puts(const char *str)
 */
 int64_t pi_mm_getpool(void)
 {
-    mman.mm_pool_start = pi_mmap(NULL,PI_MM_POOL_SZ,PROT_WRITE | PROT_READ,MAP_ANONYMOUS | MAP_PRIVATE,-1,0);
+    mman.mm_pool_start = pi_mmap(NULL,PI_MM_POOL_SZ,PROT_WRITE | PROT_READ,MAP_ANONYMOUS | MAP_PRIVATE,-1,0); //PI_MM_POOL_SZ=0x8000 bytes
     pi_check_syscall_fault(mman.mm_pool_start);
 
     mman.mm_pool_end = mman.mm_pool_start + PI_MM_POOL_SZ;
@@ -556,7 +556,7 @@ void pi_do_init(void)
                 
                     target_code_vaddr  = target_elf->loadsegments.code_vaddr;
                     target_code_offset = target_elf->loadsegments.code_offset;
-                
+                    
                 }
                 target_elf->loadsegments.data_vaddr  = tmp_phdr->p_vaddr;
                 target_elf->loadsegments.data_offset = tmp_phdr->p_offset;

