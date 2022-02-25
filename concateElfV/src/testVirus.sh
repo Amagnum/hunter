@@ -1,5 +1,5 @@
 #!/bin/bash
-gcc -o virus ref_virus2.c
+gcc -o virus virus.c
 gcc -o sweet sweet.c
 echo "V: running virus"  
 ./virus #running virus
@@ -11,11 +11,11 @@ echo "S: infecting first sweet file"
 echo "
 S: Creating another healthy file
 "
-gcc -o sweet2 sweet.c
+gcc -o sweet_diff sweet.c
 echo "S: Running infected file"
 ./sweet
 echo "S2: second file infected!!"
-./sweet2
+./sweet_diff
 echo "
 Removing executables"
-rm sweet sweet2 virus
+rm sweet sweet_diff virus
