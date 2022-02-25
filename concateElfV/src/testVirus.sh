@@ -1,21 +1,22 @@
 #!/bin/bash
 gcc -o virus virus.c
+echo "#include<stdio.h>
+int main(){
+    printf(\"Sweet World!\n\");
+    return 0;
+}" > sweet.c
 gcc -o sweet sweet.c
 echo "V: running virus"  
 ./virus #running virus
-echo "
-Virus size"
+echo -ne "\nVirus size: "
 wc ./virus -c
-echo "S: infecting first sweet file"
+echo -e "\nS: infecting first sweet file"
 ./sweet #infected sweet
-echo "
-S: Creating another healthy file
-"
+# echo -e "\nS: Creating another healthy file\n"
 gcc -o sweet_diff sweet.c
-echo "S: Running infected file"
-./sweet
+echo "S: Infecting another file"
+./sweet > /dev/null
 echo "S2: second file infected!!"
 ./sweet_diff
-echo "
-Removing executables"
-rm sweet sweet_diff virus
+echo -e "\nRemoving executables"
+rm sweet* virus

