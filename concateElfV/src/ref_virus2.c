@@ -11,7 +11,7 @@
 #include <string.h>
 
 #define SIGNATURE 4033
-#define SIZE 34600
+#define SIZE 18168
 // #define PAYLOAD_MESSAGE "Virus has entered your system [^-^]"
 #define TEMP_FILENAME ".infectedFileImage"
 
