@@ -1,0 +1,36 @@
+00000000  50                push rax
+00000001  53                push rbx
+00000002  57                push rdi
+00000003  56                push rsi
+00000004  52                push rdx
+00000005  51                push rcx
+00000006  55                push rbp
+00000007  4831C0            xor rax,rax
+0000000A  4831DB            xor rbx,rbx
+0000000D  4831D2            xor rdx,rdx
+00000010  4831C9            xor rcx,rcx
+00000013  4831ED            xor rbp,rbp
+00000016  E841000000        call 0x5c
+0000001B  5F                pop rdi
+0000001C  4881EF41414141    sub rdi,0x41414141
+00000023  4881C743434343    add rdi,0x43434343
+0000002A  BE42424242        mov esi,0x42424242
+0000002F  BA01000000        mov edx,0x1
+00000034  4883CA02          or rdx,byte +0x2
+00000038  4883CA04          or rdx,byte +0x4
+0000003C  B80A000000        mov eax,0xa
+00000041  0F05              syscall
+00000043  E816000000        call 0x5e
+00000048  58                pop rax
+00000049  4883C018          add rax,byte +0x18
+0000004D  4889050C000000    mov [rel 0x60],rax
+00000054  5D                pop rbp
+00000055  59                pop rcx
+00000056  5A                pop rdx
+00000057  5E                pop rsi
+00000058  5F                pop rdi
+00000059  5B                pop rbx
+0000005A  58                pop rax
+0000005B  C3                ret
+0000005C  EBBD              jmp short 0x1b
+0000005E  EBE8              jmp short 0x48

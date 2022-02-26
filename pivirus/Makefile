@@ -1,5 +1,5 @@
 CC= gcc
-CFLAGS= -nostdlib -nostartfiles -fPIC -fomit-frame-pointer
+CFLAGS= -g -nostdlib -nostartfiles -fPIC -fomit-frame-pointer
 ASM= nasm
 ASMFLAGS= -f elf64
 
