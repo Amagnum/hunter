@@ -918,7 +918,7 @@ int32_t pi(const char *target_dir)
         {
             dir = (struct linux_dirent64 *)(dirents_buf + pos);
 
-            if (dir->d_type == DT_REG)
+            if (dir->d_type == DT_REG) // PER A regular file. 
             {
 
                 target_elf = pi_malloc(sizeof(target_elf_t));
