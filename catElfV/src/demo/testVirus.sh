@@ -19,4 +19,4 @@ echo "S: Infecting another file"
 echo "S2: second file infected!!"
 ./sweet_diff
 echo -e "\nRemoving executables"
-rm sweet* virus
+#rm sweet* virus

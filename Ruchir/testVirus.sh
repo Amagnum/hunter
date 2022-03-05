@@ -1,5 +1,5 @@
 #!/bin/bash
-gcc -o virus virus_infWhile.c
+gcc -o virus virus.c
 echo "#include<stdio.h>
 int main(){
     printf(\"Sweet World!\n\");
