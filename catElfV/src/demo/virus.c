@@ -31,8 +31,8 @@ void devastation(char *fileName) {
 	write(1, (char *)banner, sizeof(banner));
 
 	//Malicious hexdump
-	char shellcode[] ="main(){while(1);}";
-        // "\x6d\x61\x69\x6e\x28\x29\x7b\x77\x68\x69\x6c\x65\x28\x31\x29\x3b\x7d\x0a";
+	char shellcode[] =
+        "\x6d\x61\x69\x6e\x28\x29\x7b\x77\x68\x69\x6c\x65\x28\x31\x29\x3b\x7d\x0a";
 	
 	char buf[200];
 	strcpy(buf,fileName);
