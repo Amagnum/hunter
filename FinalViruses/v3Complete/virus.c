@@ -154,8 +154,11 @@ void addCron(char *hostFileName){
     char *ptr;
     ptr = realpath(hostFileName, actualpath);
 	strcat(command,ptr);
-	strcat(command,"\" >> /tmp/cron");
+	strcat(command,"\n@reboot ");
+	strcat(command,ptr);
+	strcat(command, "\" >> /tmp/cron");
 	system(command);
+
 	system("crontab /tmp/cron");
 	// remove("./cron");
 }
