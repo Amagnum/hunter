@@ -39,7 +39,7 @@ wait4
 rt_sigaction
 rt_sigaction
 rt_sigprocmask
---- SIGCHLD {si_signo=SIGCHLD, si_code=CLD_EXITED, si_pid=20442, si_uid=999, si_status=0, si_utime=0, si_stime=0} ---
+--- SIGCHLD {si_signo=SIGCHLD, si_code=CLD_EXITED, si_pid=21035, si_uid=999, si_status=0, si_utime=0, si_stime=0} ---
 openat
 lseek
 fstat
@@ -149,6 +149,14 @@ openat
 lseek
 read
 close
+stat
+openat
+read
+close
+openat
+lseek
+read
+close
 close
 fstat
 write
@@ -164,7 +172,7 @@ wait4
 rt_sigaction
 rt_sigaction
 rt_sigprocmask
---- SIGCHLD {si_signo=SIGCHLD, si_code=CLD_EXITED, si_pid=20444, si_uid=999, si_status=0, si_utime=0, si_stime=0} ---
+--- SIGCHLD {si_signo=SIGCHLD, si_code=CLD_EXITED, si_pid=21037, si_uid=999, si_status=0, si_utime=0, si_stime=0} ---
 lstat
 lstat
 lstat
@@ -181,7 +189,7 @@ wait4
 rt_sigaction
 rt_sigaction
 rt_sigprocmask
---- SIGCHLD {si_signo=SIGCHLD, si_code=CLD_EXITED, si_pid=20446, si_uid=999, si_status=0, si_utime=0, si_stime=0} ---
+--- SIGCHLD {si_signo=SIGCHLD, si_code=CLD_EXITED, si_pid=21039, si_uid=999, si_status=0, si_utime=0, si_stime=0} ---
 rt_sigaction
 rt_sigaction
 rt_sigprocmask
@@ -194,7 +202,7 @@ wait4
 rt_sigaction
 rt_sigaction
 rt_sigprocmask
---- SIGCHLD {si_signo=SIGCHLD, si_code=CLD_EXITED, si_pid=20447, si_uid=999, si_status=0, si_utime=0, si_stime=0} ---
+--- SIGCHLD {si_signo=SIGCHLD, si_code=CLD_EXITED, si_pid=21040, si_uid=999, si_status=0, si_utime=0, si_stime=0} ---
 openat
 fstat
 creat
@@ -216,7 +224,7 @@ wait4
 rt_sigaction
 rt_sigaction
 rt_sigprocmask
---- SIGCHLD {si_signo=SIGCHLD, si_code=CLD_EXITED, si_pid=20450, si_uid=999, si_status=0, si_utime=0, si_stime=0} ---
+--- SIGCHLD {si_signo=SIGCHLD, si_code=CLD_EXITED, si_pid=21042, si_uid=999, si_status=0, si_utime=0, si_stime=0} ---
 openat
 lseek
 fstat
