@@ -1,0 +1,15 @@
++++ exited with 0 +++
+close
+execve
+exit
+fstat
+getdents64
+gettimeofday
+getuid
+lseek
+mmap
+munmap
+open
+read
+rename
+write
