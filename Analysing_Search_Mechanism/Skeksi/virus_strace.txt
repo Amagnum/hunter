@@ -1,0 +1,27 @@
+execve("./virus", ["./virus"], 0x7fff37d83300 /* 44 vars */) = 0
+getuid()                                = 0
+gettimeofday({tv_sec=1651228768, tv_usec=859186}, NULL) = 0
+open(".", O_RDONLY|O_DIRECTORY)         = 3
+getdents64(3, /* 10 entries */, 32768)  = 344
+mmap(NULL, 2097152, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x7fb3b2c76000
+open("./main_disassembly_intel_extracted.txt", O_RDONLY) = 4
+read(4, "", 4096)                       = 0
+close(4)                                = 0
+open("./make.sh", O_RDONLY)             = 4
+read(4, "#!/bin/bash\nstrip virus\nstrace ."..., 4096) = 322
+close(4)                                = 0
+open("./virus_strace.txt", O_RDONLY)    = 4
+read(4, "", 4096)                       = 0
+close(4)                                = 0
+open("./out.txt", O_RDONLY)             = 4
+read(4, "", 4096)                       = 0
+close(4)                                = 0
+open("./virus.c", O_RDONLY)             = 4
+read(4, "/*\n * Skeksi Virus v0.1 - infect"..., 4096) = 4096
+close(4)                                = 0
+open("./virus.o", O_RDONLY)             = 4
+read(4, "\177ELF\2\1\1\0\0\0\0\0\0\0\0\0\1\0>\0\1\0\0\0\0\0\0\0\0\0\0\0"..., 4096) = 4096
+close(4)                                = 0
+getdents64(3, /* 0 entries */, 32768)   = 0
+exit(0)                                 = ?
++++ exited with 0 +++
