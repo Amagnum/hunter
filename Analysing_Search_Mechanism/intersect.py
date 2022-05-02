@@ -48,13 +48,16 @@ def lcs(X, Y, m, n):
 
     common = lcs.split('\n')
     common = common[::-1][1:]
-
+    comLen = len(common)
+    
     print(common)
-    print(len(common))
-    print('\n'.join(common))
+    print(comLen) 
+    # print('\n'.join(common))
     filr = open('common.txt', 'w')
     filr.write('\n'.join(common))
     filr.close()
+    print('File1: '+ str(comLen/m))
+    print('File2: '+ str(comLen/n))
 
 m = len(X)
 n = len(Y)
