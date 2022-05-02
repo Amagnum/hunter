@@ -48,6 +48,7 @@ def lcs(X, Y, m, n):
 
     common = lcs.split('\n')
     common = common[::-1][1:]
+    comLen = len(common)
     
     print(common)
     print(comLen) 
