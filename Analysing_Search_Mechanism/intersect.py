@@ -1,6 +1,6 @@
 # Dynamic Programming implementation of LCS problem
-f1 = open("/content/hunter/Analysing_Search_Mechanism/Skeksi/main_disassembly_intel_extracted.txt", "r")
-f2 = open("/content/hunter/Analysing_Search_Mechanism/Virus/main_disassembly_intel_extracted.txt", "r")
+f1 = open("./Skeksi/main_disassembly_intel_extracted.txt", "r")
+f2 = open("./Virus/main_disassembly_intel_extracted.txt", "r")
 X = f1.readlines()
 Y = f2.readlines()
 f1.close()
