@@ -13,6 +13,9 @@ close
 open
 read
 close
+open
+read
+close
 getdents64
 gettimeofday
 write
