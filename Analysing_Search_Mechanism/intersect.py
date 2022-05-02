@@ -1,13 +1,15 @@
 import matplotlib.pyplot as plt
 
 # Dynamic Programming implementation of LCS problem
-f1 = open("/content/hunter/Analysing_Search_Mechanism/Skeksi/main_disassembly_intel_extracted.txt", "r")
-f2 = open("/content/hunter/Analysing_Search_Mechanism/Virus/main_disassembly_intel_extracted.txt", "r")
+f1 = open("./Skeksi/main_disassembly_intel_extracted.txt", "r")
+f2 = open("./Virus/main_disassembly_intel_extracted.txt", "r")
+f3 = open("../Job_analysing_system_calls/Dynamic_analysis/Virus/main_disassembly_intel_extracted.txt", "r")
 X = f1.readlines()
 Y = f2.readlines()
+Z = f3.readlines()
 f1.close()
 f2.close()
-
+f3.close()
 def ploty(x1, x2, m, n):
     if(len(x1)>len(x2)): 
       return ploty(x2, x1, n, m)
@@ -106,5 +108,6 @@ def lcs(X, Y, m, n):
 
 m = len(X)
 n = len(Y)
+o = len(Z)
 lcs(X, Y, m, n)
  
