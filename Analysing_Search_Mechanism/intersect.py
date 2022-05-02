@@ -3,7 +3,8 @@ f1 = open("/content/hunter/Analysing_Search_Mechanism/Skeksi/main_disassembly_in
 f2 = open("/content/hunter/Analysing_Search_Mechanism/Virus/main_disassembly_intel_extracted.txt", "r")
 X = f1.readlines()
 Y = f2.readlines()
-
+f1.close()
+f2.close()
 
 def lcs(X, Y, m, n):
     L = [[0 for i in range(n+1)] for j in range(m+1)]
