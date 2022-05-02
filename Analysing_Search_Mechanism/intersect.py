@@ -1,10 +1,48 @@
+import matplotlib.pyplot as plt
+
 # Dynamic Programming implementation of LCS problem
-f1 = open("./Skeksi/main_disassembly_intel_extracted.txt", "r")
-f2 = open("./Virus/main_disassembly_intel_extracted.txt", "r")
+f1 = open("/content/hunter/Analysing_Search_Mechanism/Skeksi/main_disassembly_intel_extracted.txt", "r")
+f2 = open("/content/hunter/Analysing_Search_Mechanism/Virus/main_disassembly_intel_extracted.txt", "r")
 X = f1.readlines()
 Y = f2.readlines()
 f1.close()
 f2.close()
+
+def ploty(x1, x2, m, n):
+    if(len(x1)>len(x2)): 
+      return ploty(x2, x1, n, m)
+
+    y1 = [2]*len(x1)
+    y2 = [4]*len(x2)
+    
+    plt.figure(figsize=(120,16))
+    # plt.scatter(x1, y1, color= "green",
+    #             marker= ".", s=100)
+    # plt.scatter(x2, y2, color= "red",
+    #             marker= ".", s=100)
+    print(x2[-1])
+    scale_fac=n/m
+    print(scale_fac)
+    for i in range(len(x1)):
+      plt.plot([x2[i],x1[i]*scale_fac], [4,2], color='green', linestyle='solid', linewidth = 3,
+         marker='.', markerfacecolor='blue', markersize=6)
+
+    plt.xlabel('x - axis')
+    plt.ylabel('y - axis')
+    plt.title('My scatter plot!')
+    plt.axis([-1, max((m),(n)), -1, 10])
+    plt.show()
+
+def markMatch(X, com):
+    comLen = len(com)
+    m = len(X)
+    colored1 = []
+    j=0
+    for i in range(m):
+      if j<comLen and X[i][:-1] == com[j]:
+        colored1.append(i)
+        j+=1
+    return colored1
 
 def lcs(X, Y, m, n):
     L = [[0 for i in range(n+1)] for j in range(m+1)]
@@ -50,15 +88,21 @@ def lcs(X, Y, m, n):
     common = lcs.split('\n')
     common = common[::-1][1:]
     comLen = len(common)
-    
+    joined = '\n'.join(common)
     print(common)
     print(comLen) 
     # print('\n'.join(common))
     filr = open('common.txt', 'w')
-    filr.write('\n'.join(common))
+    filr.write(joined)
     filr.close()
     print('File1: '+ str(comLen/m))
     print('File2: '+ str(comLen/n))
+
+    marks1 = markMatch(X,common)
+    marks2 = markMatch(Y,common)
+    print(marks1)
+    print(marks2)
+    ploty(marks1, marks2, m, n)
 
 m = len(X)
 n = len(Y)
