@@ -1,10 +1,14 @@
-+++ exited with 0 +++
 close
 execve
 exit
++++ exited with 0 +++
+fstat
 getdents64
 gettimeofday
+lseek
 mmap
+munmap
 open
 read
+rename
 write
