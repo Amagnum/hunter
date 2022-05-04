@@ -2,13 +2,13 @@ import matplotlib.pyplot as plt
 
 # Dynamic Programming implementation of LCS problem
 
-f2 = open("/content/hunter/Job_analysing_system_calls/Static_analysis/virus/virus/virus.sc", "r")
-f1 = open("/content/hunter/Job_analysing_system_calls/Static_analysis/skeksi/skeksi/skeksi.sc", "r")
-f3 = open("/content/hunter/Job_analysing_system_calls/Dynamic_analysis/Virus/main_disassembly_intel_extracted.txt", "r")
+# f2 = open("/content/hunter/Job_analysing_system_calls/Static_analysis/virus/virus/virus.sc", "r")
+# f1 = open("/content/hunter/Job_analysing_system_calls/Static_analysis/skeksi/skeksi/skeksi.sc", "r")
+# f3 = open("/content/hunter/Job_analysing_system_calls/Dynamic_analysis/Virus/main_disassembly_intel_extracted.txt", "r")
 
-# f1 = open("./Skeksi/main_disassembly_intel_extracted.txt", "r")
-# f2 = open("./Virus/main_disassembly_intel_extracted.txt", "r")
-# f3 = open("../Job_analysing_system_calls/Dynamic_analysis/Virus/main_disassembly_intel_extracted.txt", "r")
+f1 = open("./Skeksi/search_skeksi_strace.txt.sc", "r")
+f2 = open("./Virus/search_virus_strace.txt.sc", "r")
+f3 = open("../Job_analysing_system_calls/Dynamic_analysis/Virus/main_disassembly_intel_extracted.txt", "r")
 X = f1.readlines()
 Y = f2.readlines()
 Z = f3.readlines()

